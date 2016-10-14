@@ -1,14 +1,15 @@
 import ROOT
 
 class samples:
-  def __init__(self, name='default', treeName='events', isData=False, subGroup = None, xsec=1.,rootfiles=''):
+  def __init__(self, name='default', treeName='events', isData=False, subGroup = None, xsec=1., nEvents=1, rootfiles=''):
     self.name     = name
     self.isData   = isData
     self.subGroup = subGroup
     self.xsec     = xsec
     self.chain    = ROOT.TChain(treeName)
-    self.weight = 1.
-    self.nEvents = 0
+    self.weight   = 1.
+    self.nEvents  = nEvents
+    self.nEntries = 0
     self.targetLumi = 1.
     self.chain.Add(rootfiles)
 
@@ -20,7 +21,7 @@ class samples:
 #    self.chain    = ROOT.TChain(treeName)
 
   def calculateWeight(self):
-    self.nEvents    = self.chain.GetEntries()
+    self.nEntries   = self.chain.GetEntries()
     self.weight     = self.xsec * self.targetLumi / self.nEvents
 
   def setTargetLumi(self,lumi):
