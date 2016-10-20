@@ -41,5 +41,4 @@ for s in allMCSamples:
   s.setTargetLumi(12.9)
   s.calculateWeight()
 
-data = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles='../Ntuples/Zmumu/20160708/data/*.root')
-
+data = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles='../Ntuples/Zmumu/20160708/Data/*.root')

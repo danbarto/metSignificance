@@ -78,6 +78,7 @@ for s in allMCSamples:
     dmet_x = 0
     dmet_y = 0
 
+    # could remove those and directly call objects
     jet_pts   = [x for x in s.chain.jet_pt]
     jet_dpts  = [x for x in s.chain.jet_sigmapt]
     jet_phis  = [x for x in s.chain.jet_phi]
