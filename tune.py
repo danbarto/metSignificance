@@ -14,8 +14,8 @@ outfile = 'MC_tune.txt'
 presel = 'Sum$(jet_pt>0)>1'
 sigCut = 9.
 
-samples = [WW,WZ,ZZ]#,ST_top,ST_antitop]
-#samples = allMCSamples
+#samples = [WW,WZ,ZZ]#,ST_top,ST_antitop]
+samples = allMCSamples
 #samples = [data]
 isData = False
 

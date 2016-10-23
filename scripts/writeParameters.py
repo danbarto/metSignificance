@@ -24,15 +24,25 @@ paraMC = [\
 with open('../data/paraMC.txt', 'w') as outfile:
   json.dump(paraMC, outfile)
 
-paraData = {\
-"a1":1.26,
-"a2":1.14,
-"a3":1.13,
-"a4":1.13,
-"a5":1.06,
-"N":-3.3,
-"S":0.5961
-}
+paraData = [\
+1.26,
+1.14,
+1.13,
+1.13,
+1.06,
+-3.3,
+0.5961
+]
+
+#paraData = {\
+#"a1":1.26,
+#"a2":1.14,
+#"a3":1.13,
+#"a4":1.13,
+#"a5":1.06,
+#"N":-3.3,
+#"S":0.5961
+#}
 
 with open('../data/paraData.txt', 'w') as outfile:
   json.dump(paraData, outfile)

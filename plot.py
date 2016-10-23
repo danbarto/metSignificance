@@ -6,6 +6,7 @@ from math import *
 
 import json
 
+etabins = [(0,0.8),(0.8,1.3),(1.3,1.9),(1.9,2.5),(2.5,100)]
 
 
 # Load parameters for significance calculation
@@ -16,7 +17,7 @@ with open('data/paraMC.txt', 'r') as paraMC:
   #print(json.dumps(parMC,sort_keys=True,indent=2))
 
 #print
-print 'Loaded Parameters for MC from file'
+print 'Loaded Parameters for data from file'
 with open('data/paraData.txt', 'r') as paraData:
   parData = json.load(paraData, encoding="utf-8")
   #print(json.dumps(parData,sort_keys=True,indent=2))
@@ -41,19 +42,10 @@ presel = 'Sum$(jet_pt>0)>1'
 
 rand = ROOT.TRandom3(101)
 
-# create histogram with parameters out of json
-nBins = 0
-bins = []
-for a in parMC:
-  if 'a' in a:
-    nBins += 1
-    bins.append(parMC[a]['eta'][1])
-bins.append(0.)
-bins = sorted(bins)
 
 allSamples = allMCSamples + [data]
 
-for s in allMCSamples:
+for s in allSamples:
   
   weight = s.weight
   
@@ -64,7 +56,9 @@ for s in allMCSamples:
 
   #Event Loop starts here
   first = True
-
+  
+  if s.isData: par = parData
+  else: par = parMC
   for i in range(number_events):
 
     s.chain.GetEntry(elist.GetEntry(i))
@@ -91,9 +85,10 @@ for s in allMCSamples:
     for i,j in enumerate(jet_pts):
       jpt = j
       if j > jet_pt_split:
-        for a in parMC:
-          if parMC[a]['eta'][0] <= jet_etas[i] < parMC[a]['eta'][1]:
-            parA = parMC[a]['v']
+        for ia, a in enumerate(etabins):
+          if a[0] <= abs(jet_etas[i]) < a[1]:
+            index = ia
+        parA = par[index]
         # jet smearing
         
         cj = cos(jet_phis[i])
@@ -119,7 +114,7 @@ for s in allMCSamples:
         cov_yy += dph2*cj*cj + dpt2*sj*sj
 
     # pseudo-jet stuff
-    cov_tt = parMC['N']['v']**2 + parMC['S']['v']*s.chain.met_sumpt
+    cov_tt = par[5]**2 + par[6]**2*s.chain.met_sumpt
     cov_xx += cov_tt
     cov_yy += cov_tt
     
@@ -158,6 +153,6 @@ sig_stack.Add(sig_hist['Zmumu'])
 
 sig_stack.Draw('hist')
 
-
+sig_hist['data'].Draw('e1p same')
 
 

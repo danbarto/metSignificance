@@ -5,7 +5,7 @@ rand = ROOT.TRandom3(10**6+1)
 etabins = [(0,0.8),(0.8,1.3),(1.3,1.9),(1.9,2.5),(2.5,100)]
 
 class event:
-  def __init__(self, weight=1,jet_pt=[],jet_phi=[],jet_eta=[],jet_sigmapt=[],jet_sigmaphi=[],jet_sf=[],met_pt=0,met_phi=0,met_sumpt=0,significance=0,cov_xx=0,cov_xy=0,cov_yy=0,det=0):
+  def __init__(self, weight=1,jet_pt=[],jet_phi=[],jet_eta=[],jet_sigmapt=[],jet_sigmaphi=[],jet_sf=[],met_pt=0,met_phi=0,met_sumpt=0,significance=0,cov_xx=0,cov_xy=0,cov_yy=0,det=0,group=None):
     self.weight       = weight
     self.jet_pt       = jet_pt
     self.jet_phi      = jet_phi
@@ -23,6 +23,7 @@ class event:
     self.det          = det
     self.dmet_x       = 0
     self.dmet_y       = 0
+    self.group        = group
 
   def setSignif(self, significance=0,cov_xx=0,cov_xy=0,cov_yy=0,det=0):
     self.sig          = significance
@@ -76,7 +77,7 @@ class event:
         self.cov_xy += (dpt2-dph2)*cj*sj
         self.cov_yy += dph2*cj*cj + dpt2*sj*sj
       else:
-        print 'not doing anything'
+        print 'not doing anything?'
     # pseudo-jet stuff
     cov_tt = args[5]**2 + args[6]**2*self.met_sumpt
     self.cov_xx += cov_tt
@@ -106,6 +107,7 @@ class eventlist:
     self.samples  = samples
     self.cut      = cut
     self.smear    = False
+    self.args     = []
 
     for s in self.samples:
     
@@ -130,13 +132,14 @@ class eventlist:
         met_pt    = s.chain.met_pt
         met_phi   = s.chain.met_phi
         met_sumpt = s.chain.met_sumpt
-        self.evlist.append(event(weight,jet_pts,jet_phis,jet_etas,jet_sigmapts,jet_sigmaphis,jet_sfs,met_pt,met_phi,met_sumpt))
+        self.evlist.append(event(weight,jet_pts,jet_phis,jet_etas,jet_sigmapts,jet_sigmaphis,jet_sfs,met_pt,met_phi,met_sumpt,group=s.subGroup))
   
   def doJetSmearing(self,smear):
     self.smear = smear
   
   def getLL(self, args):
-    self.LL = 0.
+    self.LL   = 0.
+    self.args = args
     for ev in self.evlist:
       ev.getSig(args, self.smear)
       self.LL += ev.weight * (ev.sig + log(ev.det))
