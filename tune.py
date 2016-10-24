@@ -8,15 +8,15 @@ from math import *
 
 import json
 
-outfile = 'MC_tune.txt'
+outfile = 'data/data_tune_0jet.txt'
 
 # Define working points etc
-presel = 'Sum$(jet_pt>0)>1'
+presel = 'Sum$(jet_pt>0)>=0'
 sigCut = 9.
 
 #samples = [WW,WZ,ZZ]#,ST_top,ST_antitop]
-samples = allMCSamples
-#samples = [data]
+#samples = allMCSamples
+samples = [data]
 isData = False
 
 # load chain to list
