@@ -5,7 +5,7 @@ rand = ROOT.TRandom3(10**6+1)
 etabins = [(0,0.8),(0.8,1.3),(1.3,1.9),(1.9,2.5),(2.5,100)]
 
 class event:
-  def __init__(self, weight=1,jet_pt=[],jet_phi=[],jet_eta=[],jet_sigmapt=[],jet_sigmaphi=[],jet_sf=[],met_pt=0,met_phi=0,met_sumpt=0,significance=0,cov_xx=0,cov_xy=0,cov_yy=0,det=0,group=None):
+  def __init__(self, weight=1,jet_pt=[],jet_phi=[],jet_eta=[],jet_sigmapt=[],jet_sigmaphi=[],jet_sf=[],met_pt=0,met_phi=0,met_sumpt=0,significance=0,cov_xx=0,cov_xy=0,cov_yy=0,det=0,group=None,isData=False):
     self.weight       = weight
     self.jet_pt       = jet_pt
     self.jet_phi      = jet_phi
@@ -24,6 +24,7 @@ class event:
     self.dmet_x       = 0
     self.dmet_y       = 0
     self.group        = group
+    self.isData       = isData
 
   def setSignif(self, significance=0,cov_xx=0,cov_xy=0,cov_yy=0,det=0):
     self.sig          = significance
@@ -40,44 +41,45 @@ class event:
     self.det          = 0
     self.dmet_x       = 0
     self.dmet_y       = 0
-    jet_pt_split = 15.
+
     for i,j in enumerate(self.jet_pt):
       jpt = j
-      if j > jet_pt_split:
-        index = 0
-        found = False
-        for ia, a in enumerate(etabins):
-          if a[0] <= abs(self.jet_eta[i]) < a[1]:
-            index = ia
-            found = True
+      index = 0
+      found = False
+      for ia, a in enumerate(etabins):
+        if a[0] <= abs(self.jet_eta[i]) < a[1]:
+          index = ia
+          found = True
 
-        if not found: print 'jet eta outside (0,100), sth went wrong'
-        # jet smearing
+      if not found: print 'jet eta outside (0,100), sth went wrong'
+      # jet smearing
 
-        cj = cos(self.jet_phi[i])
-        sj = sin(self.jet_phi[i])
+      cj = cos(self.jet_phi[i])
+      sj = sin(self.jet_phi[i])
 
-        if smear:
-          jetsf = self.jet_sf[i]
-          if( jetsf < 1 ): jetsf = 1
-          sm = rand.Gaus(0, sqrt((jetsf**2)-1) * self.jet_sigmapt[i]*jpt)
-          #print sm
-          self.dmet_x -= cj*sm
-          self.dmet_y -= sj*sm
+      if smear:
+        jetsf = self.jet_sf[i]
+        if( jetsf < 1 ): jetsf = 1
+        sm = rand.Gaus(0, sqrt((jetsf**2)-1) * self.jet_sigmapt[i]*jpt)
+        #print sm
+        self.dmet_x -= cj*sm
+        self.dmet_y -= sj*sm
 
-          jpt += sm;
-
-        dpt = args[index] * jpt * self.jet_sigmapt[i]
-        dph =               jpt * self.jet_sigmaphi[i]
-
-        dpt2 = dpt**2
-        dph2 = dph**2
-
-        self.cov_xx += dpt2*cj*cj + dph2*sj*sj
-        self.cov_xy += (dpt2-dph2)*cj*sj
-        self.cov_yy += dph2*cj*cj + dpt2*sj*sj
+        jpt += sm;
+      
+      if self.isData:
+        dpt = args[index] * jpt * self.jet_sigmapt[i] * self.jet_sf[i]
       else:
-        print 'not doing anything?'
+        dpt = args[index] * jpt * self.jet_sigmapt[i]
+      dph =               jpt * self.jet_sigmaphi[i]
+
+      dpt2 = dpt**2
+      dph2 = dph**2
+
+      self.cov_xx += dpt2*cj*cj + dph2*sj*sj
+      self.cov_xy += (dpt2-dph2)*cj*sj
+      self.cov_yy += dph2*cj*cj + dpt2*sj*sj
+
     # pseudo-jet stuff
     cov_tt = args[5]**2 + args[6]**2*self.met_sumpt
     self.cov_xx += cov_tt
@@ -132,7 +134,7 @@ class eventlist:
         met_pt    = s.chain.met_pt
         met_phi   = s.chain.met_phi
         met_sumpt = s.chain.met_sumpt
-        self.evlist.append(event(weight,jet_pts,jet_phis,jet_etas,jet_sigmapts,jet_sigmaphis,jet_sfs,met_pt,met_phi,met_sumpt,group=s.subGroup))
+        self.evlist.append(event(weight,jet_pts,jet_phis,jet_etas,jet_sigmapts,jet_sigmaphis,jet_sfs,met_pt,met_phi,met_sumpt,group=s.subGroup,isData=s.isData))
   
   def doJetSmearing(self,smear):
     self.smear = smear

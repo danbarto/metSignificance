@@ -8,13 +8,13 @@ from math import *
 
 import json
 
-outfile = 'data/data_tune_0jet.txt'
+outfile = 'data/data_tune_SFtest.txt'
 
 # Define working points etc
-presel = 'Sum$(jet_pt>0)>=0'
+presel = 'Sum$(jet_pt>0)>=2'
 sigCut = 9.
 
-#samples = [WW,WZ,ZZ]#,ST_top,ST_antitop]
+#samples = [WW,WZ,ZZ,ST_top,ST_antitop]
 #samples = allMCSamples
 samples = [data]
 isData = False
@@ -22,7 +22,7 @@ isData = False
 # load chain to list
 el = eventlist( samples, presel )
 
-el.doJetSmearing(False)
+el.doJetSmearing(True)
 if isData: #protection for data
   el.doJetSmearing(False)
 
