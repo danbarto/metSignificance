@@ -10,10 +10,10 @@ import json
 
 def main():
 
-  outfile = 'data/data_tune_old_2jet15.txt'
+  outfile = 'data/data_tune_old_2jet50_2.txt'
   
   # Define working points etc
-  presel = 'Sum$(jet_pt>15&&abs(jet_eta)<2.5&&jet_passid)>=2'
+  presel = 'Sum$(jet_pt>50&&abs(jet_eta)<2.5&&jet_passid)>=2'
   sigCut = 9.
   
   #samples = [WW,WZ,ZZ,ST_top,ST_antitop]

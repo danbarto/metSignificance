@@ -1,6 +1,5 @@
 import ROOT
 import math
-import gc
 
 rand = ROOT.TRandom3(10**6+1)
 
@@ -14,36 +13,22 @@ def getBin(abseta):
       break
 
 class event:
-  def __init__(self, weight=1,jet_pt=[],jet_phi=[],jet_eta=[],jet_etabin=[],jet_sigmapt=[],jet_sigmaphi=[],jet_sf=[],met_pt=0,met_phi=0,met_sumpt=0,nvert=0,significance=0,cov_xx=0,cov_xy=0,cov_yy=0,det=0,group=None,isData=False):
+  def __init__(self, weight, sample, i, elist):
+    sample.chain.GetEntry(elist.GetEntry(i))
     self.weight       = weight
-    self.jet_pt       = jet_pt
-    self.jet_phi      = jet_phi
-    self.jet_eta      = jet_eta
-    self.jet_etabin   = jet_etabin
-    self.jet_sigmapt  = jet_sigmapt
-    self.jet_sigmaphi = jet_sigmaphi
-    self.jet_sf       = jet_sf
-    self.met_pt       = met_pt
-    self.met_phi      = met_phi
-    self.met_sumpt    = met_sumpt
-    self.nvert        = nvert
-    self.sig          = significance
-    self.cov_xx       = cov_xx
-    self.cov_xy       = cov_xy
-    self.cov_yy       = cov_yy
-    self.det          = det
-    #self.dmet_x       = 0
-    #self.dmet_y       = 0
-    self.group        = group
-    self.isData       = isData
+    self.jet_pt       = [x for x in sample.chain.jet_pt]
+    self.jet_sigmapt  = [x for x in sample.chain.jet_sigmapt]
+    self.jet_phi      = [x for x in sample.chain.jet_phi]
+    self.jet_sigmaphi = [x for x in sample.chain.jet_sigmaphi]
+    self.jet_etabin   = [getBin(abs(x)) for x in sample.chain.jet_eta]
+    self.jet_sf       = [x for x in sample.chain.jet_sf]
+    self.met_pt       = sample.chain.met_pt
+    self.met_phi      = sample.chain.met_phi
+    self.met_sumpt    = sample.chain.met_sumpt
+    self.nvert        = sample.chain.nvertices
+    self.sig          = 0.
+    self.det          = 0.
 
-  def setSignif(self, significance=0,cov_xx=0,cov_xy=0,cov_yy=0,det=0):
-    self.sig          = significance
-    self.cov_xx       = cov_xx
-    self.cov_xy       = cov_xy
-    self.cov_yy       = cov_yy
-    self.det          = det
-  
   def getSig(self, args, smear):
     cov_xx       = 0
     cov_xy       = 0
@@ -59,39 +44,21 @@ class event:
       j_sigmapt = self.jet_sigmapt[i]
       j_sigmaphi = self.jet_sigmaphi[i]
       j_sf = self.jet_sf[i]
-      #j_eta = abs(self.jet_eta[i])
       index = self.jet_etabin[i]
-      #index = 0
-      #ia = 0
-      #found = False
-      #for a in etabins:
-      #  if j_eta < a:
-      #    index = ia
-      #    found = True
-      #    break
-      #  ia += 1
-      #  #if a[0] <= j_eta < a[1]:
-      #  #  index = ia
-      #  #  found = True
 
-      #if not found: print 'jet eta outside (0,100), sth went wrong'
-      ## jet smearing
-      
       cj = math.cos(j_phi)
       sj = math.sin(j_phi)
-
+      ## jet smearing
       if smear:
         if( j_sf < 1 ): j_sf = 1
         rd = rand.Gaus(0, math.sqrt((j_sf*j_sf)-1))
-        #print rd
         sm = rd * j_sigmapt*j_pt
         dmet_x -= cj*sm
         dmet_y -= sj*sm
 
-        j_pt += sm;
-      
-      if not self.isData:
-        dpt = args[index] * j_pt * j_sigmapt# * j_sf
+        j_pt += sm
+
+        dpt = args[index] * j_pt * j_sigmapt * j_sf
       else:
         dpt = args[index] * j_pt * j_sigmapt
       dph =               j_pt * j_sigmaphi
@@ -124,9 +91,6 @@ class event:
       met_y += dmet_y
       self.met_pt = math.sqrt(met_x*met_x + met_y*met_y)
 
-    self.cov_xx = cov_xx
-    self.cov_xy = cov_xy
-    self.cov_yy = cov_yy
     self.det = det
     self.sig = met_x*met_x*ncov_xx + 2*met_x*met_y*ncov_xy + met_y*met_y*ncov_yy
 
@@ -135,7 +99,6 @@ class event:
 class eventlist:
   def __init__(self, samples, cut):
     self.evlist   = []
-    #self.samples  = samples
     self.cut      = cut
     self.smear    = False
     self.args     = []
@@ -149,24 +112,10 @@ class eventlist:
       print "Sample",s.name,", looping over " + str(number_events) + " events"
     
       #Event Loop starts here
-      for i in range(number_events):
-        s.chain.GetEntry(elist.GetEntry(i))
-        if i>0 and (i%100000)==0:
-          print "Filled ",i
-    
-        jet_pts   = [x for x in s.chain.jet_pt]
-        jet_sigmapts  = [x for x in s.chain.jet_sigmapt]
-        jet_phis  = [x for x in s.chain.jet_phi]
-        jet_sigmaphis = [x for x in s.chain.jet_sigmaphi]
-        jet_etas  = [abs(x) for x in s.chain.jet_eta]
-        jet_etabins = [getBin(abs(x)) for x in s.chain.jet_eta]
-        jet_sfs   = [x for x in s.chain.jet_sf]
-        met_pt    = s.chain.met_pt
-        met_phi   = s.chain.met_phi
-        met_sumpt = s.chain.met_sumpt
-        gc.disable()
-        self.evlist.append(event(weight,jet_pts,jet_phis,jet_etas,jet_etabins,jet_sigmapts,jet_sigmaphis,jet_sfs,met_pt,met_phi,met_sumpt,s.chain.nvertices,group=s.subGroup,isData=s.isData))
-        gc.enable()
+      #temp = (event(weight,s,i,elist) for i in range(number_events))
+      temp = [event(weight,s,i,elist) for i in range(number_events)]
+      self.evlist = self.evlist + temp
+      del temp
   
   def doJetSmearing(self,smear):
     self.smear = smear
