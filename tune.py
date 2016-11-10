@@ -10,16 +10,17 @@ import json
 
 def main():
 
-  outfile = 'data/data_tune_old_2jet50_2.txt'
+  outfile = 'data/data_tune_2016G_0jet30.txt'
   
   # Define working points etc
-  presel = 'Sum$(jet_pt>50&&abs(jet_eta)<2.5&&jet_passid)>=2'
+  presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)>=0'
   sigCut = 9.
   
   #samples = [WW,WZ,ZZ,ST_top,ST_antitop]
   samplesMC   = allMCSamples
   #samplesData = [ICHEP]
-  samplesData = [data]
+  samplesData = [data2016G]
+  #samplesData = [data]
   isData = False
   
   # load chain to list
@@ -28,7 +29,7 @@ def main():
   
   del samplesData, samplesMC
   
-  el_data.getPileUpDist()
+  #el_data.getPileUpDist()
   #el_MC.getPileUpDist()
   
   #el_MC.doPileUpReweight(el_data.PUhist)
@@ -38,6 +39,9 @@ def main():
   
   el = el_data
   
+  #Protection
+  el.evlist = [x for x in el.evlist if not math.isnan(x.met_pt)]
+
   # Do the minimization
   print 'Total events:',len(el.evlist)
   
@@ -64,8 +68,8 @@ def main():
   
   gmin.Minimize()
   
-  #save full event list
-  full_el = el
+  ##save full event list
+  #full_el = el
   
   #filter events with high significance
   el.evlist = [x  for x in el.evlist if x.sig < sigCut]
@@ -79,6 +83,7 @@ def main():
   gmin.Hesse()
   
   pars = [gmin.X()[i] for i in range(0,7)]
+  uncs = [gmin.Errors()[i] for i in range(0,7)]
   
   with open(outfile, 'w') as of:
     json.dump(pars, of)

@@ -28,14 +28,14 @@ basedir = '/afs/hephy.at/data/dspitzbart01/MetSig/tuples/'
 
 # load samples
 
-DY          = sample('DY',            xsec=xsec_dyjetstoll, nEvents=nevts_dyjetstoll, subGroup='Zmumu', rootfiles=basedir+'crab_MetSig_DY/*.root')
-TTJets      = sample('ttJets',        xsec=xsec_ttjets,     nEvents=nevts_ttjets,     subGroup='top',   rootfiles=basedir+'crab_MetSig_TTJets/*.root')
-WW          = sample('WW',            xsec=xsec_ww,         nEvents=nevts_ww,         subGroup='EWK',   rootfiles=basedir+'crab_MetSig_WW/*.root')
-WZ          = sample('WZ',            xsec=xsec_wz,         nEvents=nevts_wz,         subGroup='EWK',   rootfiles=basedir+'crab_MetSig_WZ/*.root')
-ZZ          = sample('ZZ',            xsec=xsec_zz,         nEvents=nevts_zz,         subGroup='EWK',   rootfiles=basedir+'crab_MetSig_ZZ/*.root')
-WJets       = sample('WJets',         xsec=xsec_wjetstolnu, nEvents=nevts_wjetstolnu, subGroup='EWK',   rootfiles=basedir+'crab_MetSig_WJets/*.root')
-ST_top      = sample('sTop_top',      xsec=xsec_st_top,     nEvents=nevts_st_top,     subGroup='top',   rootfiles=basedir+'crab_MetSig_ST_top/*.root')
-ST_antitop  = sample('sTop_antitop',  xsec=xsec_st_antitop, nEvents=nevts_st_antitop, subGroup='top',   rootfiles=basedir+'crab_MetSig_ST_antitop/*.root')
+DY          = sample('DY',            xsec=xsec_dyjetstoll, nEvents=nevts_dyjetstoll, subGroup='Zmumu', rootfiles=basedir+'MC_ICHEP/DYJets/*.root')
+TTJets      = sample('ttJets',        xsec=xsec_ttjets,     nEvents=nevts_ttjets,     subGroup='top',   rootfiles=basedir+'MC_ICHEP/TTJets/*.root')
+WW          = sample('WW',            xsec=xsec_ww,         nEvents=nevts_ww,         subGroup='EWK',   rootfiles=basedir+'MC_ICHEP/WW/*.root')
+WZ          = sample('WZ',            xsec=xsec_wz,         nEvents=nevts_wz,         subGroup='EWK',   rootfiles=basedir+'MC_ICHEP/WZ/*.root')
+ZZ          = sample('ZZ',            xsec=xsec_zz,         nEvents=nevts_zz,         subGroup='EWK',   rootfiles=basedir+'MC_ICHEP/ZZ/*.root')
+WJets       = sample('WJets',         xsec=xsec_wjetstolnu, nEvents=nevts_wjetstolnu, subGroup='EWK',   rootfiles=basedir+'MC_ICHEP/WJets/*.root')
+ST_top      = sample('sTop_top',      xsec=xsec_st_top,     nEvents=nevts_st_top,     subGroup='top',   rootfiles=basedir+'MC_ICHEP/ST_top/*.root')
+ST_antitop  = sample('sTop_antitop',  xsec=xsec_st_antitop, nEvents=nevts_st_antitop, subGroup='top',   rootfiles=basedir+'MC_ICHEP/ST_antitop/*.root')
 
 
 allMCSamples = [TTJets,ST_top,ST_antitop,WW,WZ,ZZ,WJets,DY]
@@ -44,12 +44,12 @@ for s in allMCSamples:
   s.setTargetLumi(12900)
   s.calculateWeight()
 
-data = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles='../Ntuples/Zmumu/20160708/Data/*.root')
+#data = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles='../Ntuples/Zmumu/20160708/Data/*.root')
 #data = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles=basedir+'crab_MetSig_Data_2016G_promptReco/*.root')
 data2016B = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles=basedir+'crab_MetSig_Data_2016B/*.root')
 data2016C = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles=basedir+'crab_MetSig_Data_2016C/*.root')
 data2016D = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles=basedir+'crab_MetSig_Data_2016D/*.root')
-#data2016G = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles=basedir+'crab_MetSig_Data_2016G/*.root')
+data2016G = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles=basedir+'crab_MetSig_Data_2016G/*.root')
 
 allICHEPSamples = [data2016B,data2016C,data2016D]
 ICHEP = sample('data', xsec=1, subGroup='Data', isData=True)

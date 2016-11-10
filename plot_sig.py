@@ -14,22 +14,35 @@ ROOT.setTDRStyle()
 import json
 
 # Define working points etc
-presel = 'Sum$(jet_pt>0)>=0'
+presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)>=2'
 
-#samples = [WW,WZ,ZZ]#,ST_top,ST_antitop]
+samplesMC   = allMCSamples
+samplesData = [ICHEP]
+#samplesData = [data]
 isData = False
 
-# load chain to list
-el_mc = eventlist( allMCSamples, presel )
-el_data = eventlist( [data], presel )
 
-with open('data/MC_tune_0jet.txt', 'r') as paraMC:
+# load chain to list
+el_data = eventlist( samplesData, presel )
+el_MC   = eventlist( samplesMC, presel )
+
+del samplesData, samplesMC
+
+el_data.getPileUpDist()
+el_MC.getPileUpDist()
+
+el_MC.doPileUpReweight(el_data.PUhist)
+
+el_MC.doJetSmearing(False)
+el_data.doJetSmearing(False)
+
+with open('data/MC_tune_ICHEP_2jet30.txt', 'r') as paraMC:
   parMC = json.load(paraMC)
 
-with open('data/data_tune_0jet.txt', 'r') as paraData:
+with open('data/data_tune_2016G_2jet30.txt', 'r') as paraData:
   parData = json.load(paraData)
 
-el_mc.getLL(parMC)
+el_MC.getLL(parMC)
 el_data.getLL(parData)
 
 # Histograms
@@ -38,7 +51,7 @@ nBins = 50
 maxSig = 100
 
 nMC = 0.
-for ev in el_mc.evlist: nMC += ev.weight
+for ev in el_MC.evlist: nMC += ev.weight
 nData = len(el_data.evlist)
 scale = nData/nMC
 
@@ -48,7 +61,7 @@ for t in types:
 
 totalH = ROOT.TH1F('total','total',nBins,0,maxSig)
 
-for ev in el_mc.evlist + el_data.evlist:
+for ev in el_MC.evlist + el_data.evlist:
   if ev.group is not 'Data':
     weight = ev.weight*scale
     totalH.Fill(ev.sig,weight)
@@ -61,9 +74,15 @@ for h in sig_hist:
   sig_hist[h].SetBinContent(nBins, sig_hist[h].GetBinContent(nBins)+sig_hist[h].GetBinContent(nBins+1))
 totalH.SetBinContent(nBins, totalH.GetBinContent(nBins)+totalH.GetBinContent(nBins+1))
 
-sig_hist['EWK'].SetFillColor(ROOT.kRed-10)
-sig_hist['top'].SetFillColor(ROOT.kYellow-9)
-sig_hist['Zmumu'].SetFillColor(ROOT.kAzure-9)
+sig_hist['EWK'].SetFillColor(ROOT.kAzure-9)
+sig_hist['EWK'].SetLineColor(ROOT.kAzure-9)
+
+sig_hist['top'].SetFillColor(ROOT.kRed-9)
+sig_hist['top'].SetLineColor(ROOT.kRed-9)
+
+sig_hist['Zmumu'].SetFillColor(ROOT.kYellow-9)
+sig_hist['Zmumu'].SetLineColor(ROOT.kYellow-9)
+
 
 stack.Add(sig_hist['top'])
 stack.Add(sig_hist['EWK'])
@@ -84,7 +103,7 @@ pad1.SetLogy()
 
 stack.Draw('hist')
 stack.SetMinimum(1)
-stack.SetMaximum(nData)
+#stack.SetMaximum(nData)
 stack.GetXaxis().SetLabelSize(0)
 stack.GetYaxis().SetTitle('Events')
 stack.GetYaxis().SetTitleSize(0.065)
@@ -138,8 +157,8 @@ ratio.SetMarkerStyle(8)
 ratio.SetMarkerSize(1)
 ratio.SetLineWidth(0)
 ratio.GetXaxis().SetTitle('')
-ratio.SetMaximum(1.59)
-ratio.SetMinimum(0.41)
+ratio.SetMaximum(2.01)
+ratio.SetMinimum(0.)
 ratio.GetXaxis().SetTitle('E_{T}^{miss} Significance')
 ratio.GetXaxis().SetTitleSize(0.12)
 ratio.GetXaxis().SetLabelSize(0.12)
@@ -156,4 +175,8 @@ one.SetLineWidth(2)
 one.Draw('same')
 
 ratio.Draw('e0p same')
+
+can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016G_Nov16/significanceTune_njet2_30.png')
+can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016G_Nov16/significanceTune_njet2_30.pdf')
+can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016G_Nov16/significanceTune_njet2_30.root')
 

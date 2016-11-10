@@ -28,6 +28,7 @@ class event:
     self.nvert        = sample.chain.nvertices
     self.sig          = 0.
     self.det          = 0.
+    self.group        = sample.subGroup
 
   def getSig(self, args, smear):
     cov_xx       = 0
