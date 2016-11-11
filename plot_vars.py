@@ -15,15 +15,20 @@ ROOT.setTDRStyle()
 presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)>=0'
 types = ['Zmumu','top','EWK','Data']
 
+# Define Labels
+lumiStr = '7.1'
+nameStr = 'Preliminary'
+addStr  = '2016G'
+
+# Define variables to plot
 ToPlot = [
-{'var':'met_sig','nBins':50,'xMax':100,'name':'Significance'},
-{'var':'met_pt','nBins':50,'xMax':100,'name':'E_{T}^{miss} (GeV)'},
-{'var':'jet_pt[0]','nBins':50,'xMax':400,'name':'p_{T}(j_{1}) (GeV)'},
-{'var':'jet_pt[1]','nBins':50,'xMax':400,'name':'p_{T}(j_{2}) (GeV)'},
-{'var':'muon_pt[0]','nBins':50,'xMax':200,'name':'p_{T}(#mu_{1}) (GeV)'},
-{'var':'muon_pt[1]','nBins':50,'xMax':200,'name':'p_{T}(#mu_{2}) (GeV)'},
-#{'var':'mu_pt[0]','nBins':50,'xMax':200},
-#{'var':'mu_pt[0]','nBins':50,'xMax':200},
+#{'var':'met_sig',   'nBins':50,'xMin':0, 'xMax':100,'name':'Significance'},
+#{'var':'met_pt',    'nBins':50,'xMin':0, 'xMax':100,'name':'E_{T}^{miss} (GeV)'},
+#{'var':'jet_pt[0]', 'nBins':50,'xMin':0, 'xMax':400,'name':'p_{T}(j_{1}) (GeV)'},
+#{'var':'jet_pt[1]', 'nBins':50,'xMin':0, 'xMax':400,'name':'p_{T}(j_{2}) (GeV)'},
+#{'var':'muon_pt[0]','nBins':50,'xMin':0, 'xMax':200,'name':'p_{T}(#mu_{1}) (GeV)'},
+#{'var':'muon_pt[1]','nBins':50,'xMin':0, 'xMax':200,'name':'p_{T}(#mu_{2}) (GeV)'},
+{'var':'sqrt(2*muon_pt[0]*muon_pt[1]*(cosh(muon_eta[0]-muon_eta[1])-cos(muon_phi[0]-muon_phi[1])))','nBins':60,'xMin':60,'xMax':120,'name':'M(#mu_{1},#mu_{2} (GeV)'},
 ]
 
 # Histograms
@@ -43,23 +48,24 @@ for s in allMCSamples:
 for p in ToPlot:
   var = p['var']
   xMax = p['xMax']
+  xMin = p['xMin']
   nBins = p['nBins']
   varname = p['name']
   
   hists = []
   for s in allMCSamples:
-    hists.append(ROOT.TH1F(s.name,s.name,nBins,0,xMax))
+    hists.append(ROOT.TH1F(s.name,s.name,nBins,xMin,xMax))
     hists[-1].SetLineColor(color[s.subGroup])
     hists[-1].SetFillColor(color[s.subGroup])
     s.chain.Draw(var+'>>'+s.name,'('+presel+')*'+str(s.weight),'goff')
   
-  data_hist = ROOT.TH1F('data','data',nBins,0,xMax)
+  data_hist = ROOT.TH1F('data','data',nBins,xMin,xMax)
   #data.chain.Draw(var+'>>data',presel,'goff')
   #ICHEP.chain.Draw(var+'>>data',presel,'goff')
   data2016G.chain.Draw(var+'>>data',presel,'goff')
   
   
-  totalH = ROOT.TH1F('total','total',nBins,0,xMax)
+  totalH = ROOT.TH1F('total','total',nBins,xMin,xMax)
   
   for h in hists:
     h.SetBinContent(nBins, h.GetBinContent(nBins)+h.GetBinContent(nBins+1))
@@ -129,6 +135,14 @@ for p in ToPlot:
   leg.AddEntry(hists[3],'EWK','f')
   leg.Draw()
   
+  latex2 = ROOT.TLatex()
+  latex2.SetNDC()
+  latex2.SetTextSize(0.04)
+  latex2.SetTextAlign(11)
+  latex2.DrawLatex(0.15,0.96,'CMS #bf{#it{'+nameStr+'}}')
+  latex2.DrawLatex(0.5,0.96,addStr)
+  latex2.DrawLatex(0.88,0.96,lumiStr+'fb^{-1}')
+  
   can.cd()
   
   pad2=ROOT.TPad("pad2","datavsMC",0.,0.,1.,.3)
@@ -138,7 +152,7 @@ for p in ToPlot:
   pad2.Draw()
   pad2.cd()
   
-  ratio = ROOT.TH1F('ratio','',nBins,0,xMax)
+  ratio = ROOT.TH1F('ratio','',nBins,xMin,xMax)
   ratio.Sumw2()
   ratio = data_hist.Clone()
   ratio.Divide(totalH)
@@ -159,7 +173,7 @@ for p in ToPlot:
   ratio.GetYaxis().SetTitleOffset(0.45)
   ratio.Draw('e0p')
   
-  one = ROOT.TF1("one","1",0,xMax)
+  one = ROOT.TF1("one","1",xMin,xMax)
   one.SetLineColor(ROOT.kRed+1)
   one.SetLineWidth(2)
   one.Draw('same')

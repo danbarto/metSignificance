@@ -22,6 +22,9 @@ class event:
     self.jet_sigmaphi = [x for x in sample.chain.jet_sigmaphi]
     self.jet_etabin   = [getBin(abs(x)) for x in sample.chain.jet_eta]
     self.jet_sf       = [x for x in sample.chain.jet_sf]
+    self.muon_pt      = [x for x in sample.chain.muon_pt]
+    self.muon_eta     = [x for x in sample.chain.muon_eta]
+    self.muon_phi     = [x for x in sample.chain.muon_phi]
     self.met_pt       = sample.chain.met_pt
     self.met_phi      = sample.chain.met_phi
     self.met_sumpt    = sample.chain.met_sumpt
@@ -30,6 +33,9 @@ class event:
     self.det          = 0.
     self.group        = sample.subGroup
 
+  def getMuonInvMass(self):
+    self.muonInvMass = math.sqrt(2*self.muon_pt[0]*self.muon_pt[1]*(math.cosh(self.muon_eta[0]-self.muon_eta[1])-math.cos(self.muon_phi[0]-self.muon_phi[1])))
+  
   def getSig(self, args, smear):
     cov_xx       = 0
     cov_xy       = 0

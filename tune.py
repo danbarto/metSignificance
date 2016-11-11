@@ -21,7 +21,7 @@ def main():
   #samplesData = [ICHEP]
   samplesData = [data2016G]
   #samplesData = [data]
-  isData = False
+  tightZwindow = False
   
   # load chain to list
   el_data = eventlist( samplesData, presel )
@@ -39,9 +39,14 @@ def main():
   
   el = el_data
   
-  #Protection
+  # Protection
   el.evlist = [x for x in el.evlist if not math.isnan(x.met_pt)]
-
+  
+  # Use additional cut
+  if tightZwindow:
+    for x in el.evlist: x.getMuonInvMass()
+    el.evlist = [x for x in el.evlist if 80 < x.muonInvMass < 100]
+  
   # Do the minimization
   print 'Total events:',len(el.evlist)
   
