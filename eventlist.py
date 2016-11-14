@@ -36,14 +36,38 @@ class event:
   def getMuonInvMass(self):
     self.muonInvMass = math.sqrt(2*self.muon_pt[0]*self.muon_pt[1]*(math.cosh(self.muon_eta[0]-self.muon_eta[1])-math.cos(self.muon_phi[0]-self.muon_phi[1])))
   
-  def getSig(self, args, smear):
-    cov_xx       = 0
-    cov_xy       = 0
-    cov_yy       = 0
+  def smearJets(self):
     dmet_x       = 0
     dmet_y       = 0
     jet_pt = self.jet_pt
+    for i,j in enumerate(jet_pt):
+      j_pt = j
+      j_sf = self.jet_sf[i]
+      j_phi = self.jet_phi[i]
+      j_sigmapt = self.jet_sigmapt[i]
+      if( j_sf < 1 ): j_sf = 1
+      rd = rand.Gaus(0, math.sqrt((j_sf*j_sf)-1))
+      sm = rd * j_sigmapt*j_pt
+      cj = math.cos(j_phi)
+      sj = math.sin(j_phi)
+      dmet_x -= cj*sm
+      dmet_y -= sj*sm
+      self.jet_pt[i] += sm
+      self.jet_sigmapt[i] = j_sigmapt * j_sf
+
+    met_x = self.met_pt * math.cos(self.met_phi)
+    met_y = self.met_pt * math.sin(self.met_phi)
+    met_x += dmet_x
+    met_y += dmet_y
+
+    self.met_pt = math.sqrt(met_x*met_x + met_y*met_y)
+    self.met_phi = (met_y/abs(met_y)) * math.acos(met_x/self.met_pt)
     
+  def getSig(self, args):
+    cov_xx       = 0
+    cov_xy       = 0
+    cov_yy       = 0
+    jet_pt = self.jet_pt
     i = 0
     for j in jet_pt:
       j_pt = j
@@ -55,19 +79,7 @@ class event:
 
       cj = math.cos(j_phi)
       sj = math.sin(j_phi)
-      ## jet smearing
-      if smear:
-        if( j_sf < 1 ): j_sf = 1
-        rd = rand.Gaus(0, math.sqrt((j_sf*j_sf)-1))
-        sm = rd * j_sigmapt*j_pt
-        dmet_x -= cj*sm
-        dmet_y -= sj*sm
-
-        j_pt += sm
-
-        dpt = args[index] * j_pt * j_sigmapt * j_sf
-      else:
-        dpt = args[index] * j_pt * j_sigmapt
+      dpt = args[index] * j_pt * j_sigmapt
       dph =               j_pt * j_sigmaphi
 
       dpt *= dpt
@@ -79,7 +91,7 @@ class event:
       
       i += 1
 
-    # pseudo-jet stuff
+    # unclustered energy
     cov_tt = args[5]*args[5] + args[6]*args[6]*self.met_sumpt
     cov_xx += cov_tt
     cov_yy += cov_tt
@@ -93,11 +105,6 @@ class event:
     met_x = self.met_pt * math.cos(self.met_phi)
     met_y = self.met_pt * math.sin(self.met_phi)
 
-    if smear:
-      met_x += dmet_x
-      met_y += dmet_y
-      self.met_pt = math.sqrt(met_x*met_x + met_y*met_y)
-
     self.det = det
     self.sig = met_x*met_x*ncov_xx + 2*met_x*met_y*ncov_xy + met_y*met_y*ncov_yy
 
@@ -107,7 +114,6 @@ class eventlist:
   def __init__(self, samples, cut):
     self.evlist   = []
     self.cut      = cut
-    self.smear    = False
     self.args     = []
 
     for s in samples:
@@ -123,9 +129,6 @@ class eventlist:
       temp = [event(weight,s,i,elist) for i in range(number_events)]
       self.evlist = self.evlist + temp
       del temp
-  
-  def doJetSmearing(self,smear):
-    self.smear = smear
   
   def getPileUpDist(self,nvert_max=100):
     self.PUhist = []
@@ -148,11 +151,15 @@ class eventlist:
       if PUweight <= 0: PUweight = minx
       ev.weight *= PUweight
   
+  def doSmearing(self):
+    for x in self.evlist: x.smearJets()
+    print 'Smeared jets'
+  
   def getLL(self, args):
     self.LL   = 0.
     self.args = args
     for ev in self.evlist:
-      ev.getSig(args, self.smear)
+      ev.getSig(args)
       self.LL += ev.weight * (ev.sig + math.log(ev.det))
     return self.LL
   

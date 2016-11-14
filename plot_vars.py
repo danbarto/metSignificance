@@ -24,11 +24,11 @@ addStr  = '2016G'
 ToPlot = [
 #{'var':'met_sig',   'nBins':50,'xMin':0, 'xMax':100,'name':'Significance'},
 #{'var':'met_pt',    'nBins':50,'xMin':0, 'xMax':100,'name':'E_{T}^{miss} (GeV)'},
-#{'var':'jet_pt[0]', 'nBins':50,'xMin':0, 'xMax':400,'name':'p_{T}(j_{1}) (GeV)'},
-#{'var':'jet_pt[1]', 'nBins':50,'xMin':0, 'xMax':400,'name':'p_{T}(j_{2}) (GeV)'},
+{'var':'jet_pt[0]*jet_sf[0]', 'nBins':50,'xMin':0, 'xMax':400,'name':'p_{T}(j_{1}) (GeV)'},
+{'var':'jet_pt[1]*jet_sf[1]', 'nBins':50,'xMin':0, 'xMax':400,'name':'p_{T}(j_{2}) (GeV)'},
 #{'var':'muon_pt[0]','nBins':50,'xMin':0, 'xMax':200,'name':'p_{T}(#mu_{1}) (GeV)'},
 #{'var':'muon_pt[1]','nBins':50,'xMin':0, 'xMax':200,'name':'p_{T}(#mu_{2}) (GeV)'},
-{'var':'sqrt(2*muon_pt[0]*muon_pt[1]*(cosh(muon_eta[0]-muon_eta[1])-cos(muon_phi[0]-muon_phi[1])))','nBins':60,'xMin':60,'xMax':120,'name':'M(#mu_{1},#mu_{2} (GeV)'},
+#{'var':'sqrt(2*muon_pt[0]*muon_pt[1]*(cosh(muon_eta[0]-muon_eta[1])-cos(muon_phi[0]-muon_phi[1])))','nBins':60,'xMin':60,'xMax':120,'name':'M(#mu_{1},#mu_{2} (GeV)'},
 ]
 
 # Histograms
