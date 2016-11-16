@@ -2,7 +2,7 @@
 #include <TFile.h>
 #include <TDirectory.h>
 
-TFile *f = new TFile("nvertDist_ICHEP.root");
+TFile *f = new TFile("data/nvertDist_2016G.root");
 TH1F * h = (TH1F*)f->Get("data")->Clone("h"); 
 
 double nvertReweight(double val = 0)

@@ -9,11 +9,11 @@ etabins = [0.8,1.3,1.9,2.5,100]
 def getBin(abseta):
   for i, a in enumerate(etabins):
     if abseta < a:
-      return i
+      return int(i)
       break
 
 class event:
-  def __init__(self, weight, sample, i, elist):
+  def __init__(self, weight, sample, i, elist, isData, tiny=False):
     sample.chain.GetEntry(elist.GetEntry(i))
     self.weight       = weight
     self.jet_pt       = [x for x in sample.chain.jet_pt]
@@ -21,17 +21,19 @@ class event:
     self.jet_phi      = [x for x in sample.chain.jet_phi]
     self.jet_sigmaphi = [x for x in sample.chain.jet_sigmaphi]
     self.jet_etabin   = [getBin(abs(x)) for x in sample.chain.jet_eta]
-    self.jet_sf       = [x for x in sample.chain.jet_sf]
-    self.muon_pt      = [x for x in sample.chain.muon_pt]
-    self.muon_eta     = [x for x in sample.chain.muon_eta]
-    self.muon_phi     = [x for x in sample.chain.muon_phi]
+    if not isData:
+      self.jet_sf     = [x for x in sample.chain.jet_sf]
     self.met_pt       = sample.chain.met_pt
     self.met_phi      = sample.chain.met_phi
     self.met_sumpt    = sample.chain.met_sumpt
     self.nvert        = sample.chain.nvertices
     self.sig          = 0.
     self.det          = 0.
-    self.group        = sample.subGroup
+    if not tiny:
+      self.group        = sample.subGroup
+      self.muon_pt      = [x for x in sample.chain.muon_pt]
+      self.muon_eta     = [x for x in sample.chain.muon_eta]
+      self.muon_phi     = [x for x in sample.chain.muon_phi]
 
   def getMuonInvMass(self):
     self.muonInvMass = math.sqrt(2*self.muon_pt[0]*self.muon_pt[1]*(math.cosh(self.muon_eta[0]-self.muon_eta[1])-math.cos(self.muon_phi[0]-self.muon_phi[1])))
@@ -55,6 +57,7 @@ class event:
       self.jet_pt[i] += sm
       self.jet_sigmapt[i] = j_sigmapt * j_sf
 
+    del self.jet_sf
     met_x = self.met_pt * math.cos(self.met_phi)
     met_y = self.met_pt * math.sin(self.met_phi)
     met_x += dmet_x
@@ -74,7 +77,6 @@ class event:
       j_phi = self.jet_phi[i]
       j_sigmapt = self.jet_sigmapt[i]
       j_sigmaphi = self.jet_sigmaphi[i]
-      j_sf = self.jet_sf[i]
       index = self.jet_etabin[i]
 
       cj = math.cos(j_phi)
@@ -111,7 +113,7 @@ class event:
 
 
 class eventlist:
-  def __init__(self, samples, cut):
+  def __init__(self, samples, cut, isData, tiny=False):
     self.evlist   = []
     self.cut      = cut
     self.args     = []
@@ -126,7 +128,7 @@ class eventlist:
     
       #Event Loop starts here
       #temp = (event(weight,s,i,elist) for i in range(number_events))
-      temp = [event(weight,s,i,elist) for i in range(number_events)]
+      temp = [event(weight,s,i,elist, isData, tiny=tiny) for i in range(number_events)]
       self.evlist = self.evlist + temp
       del temp
   

@@ -18,14 +18,14 @@ def main():
   
   #samples = [WW,WZ,ZZ,ST_top,ST_antitop]
   samplesMC   = allMCSamples
-  samplesData = [ICHEP]
-  #samplesData = [data2016G]
+  #samplesData = [ICHEP]
+  samplesData = [data2016G]
   #samplesData = [data]
   tightZwindow = False
   
   # load chain to list
-  el_data = eventlist( samplesData, presel )
-  el_MC   = eventlist( samplesMC, presel )
+  el_data = eventlist( samplesData, presel, isData=True, tiny=True )
+  el_MC   = eventlist( samplesMC, presel, isData=False, tiny=True )
   
   del samplesData, samplesMC
   

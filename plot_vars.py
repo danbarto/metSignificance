@@ -13,24 +13,24 @@ ROOT.setTDRStyle()
 ROOT.gROOT.ProcessLineSync('.x nvertReweight.C+')
 
 # Define working points etc
-presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)>=0'
+presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)>=2'
 types = ['Zmumu','top','EWK','Data']
 
 # Define Labels
-lumiStr = '12.9'
+lumiStr = '7.1'
 nameStr = 'Preliminary'
-addStr  = 'ICHEP'
+addStr  = '2016G'
 
 # Define variables to plot
 ToPlot = [
 {'var':'met_sig',   'nBins':50,'xMin':0, 'xMax':100,'name':'Significance'},
 {'var':'met_pt',    'nBins':50,'xMin':0, 'xMax':100,'name':'E_{T}^{miss} (GeV)'},
-{'var':'jet_pt[0]', 'nBins':50,'xMin':0, 'xMax':400,'name':'p_{T}(j_{1}) (GeV)'},
-{'var':'jet_pt[1]', 'nBins':50,'xMin':0, 'xMax':400,'name':'p_{T}(j_{2}) (GeV)'},
-{'var':'muon_pt[0]','nBins':50,'xMin':0, 'xMax':200,'name':'p_{T}(#mu_{1}) (GeV)'},
-{'var':'muon_pt[1]','nBins':50,'xMin':0, 'xMax':200,'name':'p_{T}(#mu_{2}) (GeV)'},
+#{'var':'jet_pt[0]', 'nBins':50,'xMin':0, 'xMax':400,'name':'p_{T}(j_{1}) (GeV)'},
+#{'var':'jet_pt[1]', 'nBins':50,'xMin':0, 'xMax':400,'name':'p_{T}(j_{2}) (GeV)'},
+#{'var':'muon_pt[0]','nBins':50,'xMin':0, 'xMax':200,'name':'p_{T}(#mu_{1}) (GeV)'},
+#{'var':'muon_pt[1]','nBins':50,'xMin':0, 'xMax':200,'name':'p_{T}(#mu_{2}) (GeV)'},
 {'var':'nvertices','nBins':100,'xMin':0, 'xMax':100,'name':'N_{vert}'},
-{'var':'sqrt(2*muon_pt[0]*muon_pt[1]*(cosh(muon_eta[0]-muon_eta[1])-cos(muon_phi[0]-muon_phi[1])))','nBins':60,'xMin':60,'xMax':120,'name':'M(#mu_{1},#mu_{2} (GeV)'},
+#{'var':'sqrt(2*muon_pt[0]*muon_pt[1]*(cosh(muon_eta[0]-muon_eta[1])-cos(muon_phi[0]-muon_phi[1])))','nBins':60,'xMin':60,'xMax':120,'name':'M(#mu_{1},#mu_{2} (GeV)'},
 ]
 
 # Histograms
@@ -44,7 +44,7 @@ color = {
 }
 
 for s in allMCSamples:
-  s.setTargetLumi(12900)
+  s.setTargetLumi(7100)
   s.calculateWeight()
 
 for p in ToPlot:
@@ -63,8 +63,8 @@ for p in ToPlot:
   
   data_hist = ROOT.TH1F('data','data',nBins,xMin,xMax)
   #data.chain.Draw(var+'>>data',presel,'goff')
-  ICHEP.chain.Draw(var+'>>data',presel,'goff')
-  #data2016G.chain.Draw(var+'>>data',presel,'goff')
+  #ICHEP.chain.Draw(var+'>>data',presel,'goff')
+  data2016G.chain.Draw(var+'>>data',presel,'goff')
   
   
   totalH = ROOT.TH1F('total','total',nBins,xMin,xMax)
@@ -185,9 +185,9 @@ for p in ToPlot:
   
   ratio.Draw('e0p same')
   
-  can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/ICHEP_Nov16/'+var+'_to'+str(xMax)+'_nvertReweight_njet0_30.png')
-  can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/ICHEP_Nov16/'+var+'_to'+str(xMax)+'_nvertReweight_njet0_30.pdf')
-  can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/ICHEP_Nov16/'+var+'_to'+str(xMax)+'_nvertReweight_njet0_30.root')
+  can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016G_Nov16/'+var+'_to'+str(xMax)+'_nvertReweight_njet2_30.png')
+  can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016G_Nov16/'+var+'_to'+str(xMax)+'_nvertReweight_njet2_30.pdf')
+  can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016G_Nov16/'+var+'_to'+str(xMax)+'_nvertReweight_njet2_30.root')
   
   obDelete = hists + [stack,ratio,data_hist,totalH,pad1,pad2,leg,one]
   for o in obDelete:
