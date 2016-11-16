@@ -18,8 +18,8 @@ def main():
   
   #samples = [WW,WZ,ZZ,ST_top,ST_antitop]
   samplesMC   = allMCSamples
-  #samplesData = [ICHEP]
-  samplesData = [data2016G]
+  samplesData = [ICHEP]
+  #samplesData = [data2016G]
   #samplesData = [data]
   tightZwindow = False
   
