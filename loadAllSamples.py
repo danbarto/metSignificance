@@ -1,5 +1,5 @@
 # load all samples in here to keep tune and plot scripts clean
-from samples import samples as sample
+from metSignificance.tools.samples import samples as sample
 import math
 
 # define xsecs (not included in samples for now)
@@ -46,13 +46,21 @@ for s in allMCSamples:
 
 #data = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles='../Ntuples/Zmumu/20160708/Data/*.root')
 #data = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles=basedir+'crab_MetSig_Data_2016G_promptReco/*.root')
-data2016B = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles=basedir+'crab_MetSig_Data_2016B/*.root')
-data2016C = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles=basedir+'crab_MetSig_Data_2016C/*.root')
-data2016D = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles=basedir+'crab_MetSig_Data_2016D/*.root')
-data2016G = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles=basedir+'crab_MetSig_Data_2016G/*.root')
+data2016B = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles=basedir+'crab_MetSig_Data_2016B_23Sep_v0/*.root')
+data2016C = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles=basedir+'crab_MetSig_Data_2016C_23Sep_v0/*.root')
+data2016D = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles=basedir+'crab_MetSig_Data_2016D_23Sep_v0/*.root')
+data2016G = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles=basedir+'crab_MetSig_Data_2016G_23Sep_v0/*.root')
+data2016E = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles=basedir+'crab_MetSig_Data_2016E_23Sep_v0/*.root')
+data2016F = sample('data', xsec=1, subGroup='Data', isData=True, rootfiles=basedir+'crab_MetSig_Data_2016F_23Sep_v0/*.root')
+
 
 allICHEPSamples = [data2016B,data2016C,data2016D]
+allDataSamples = allICHEPSamples + [data2016E,data2016F,data2016G]
 ICHEP = sample('data', xsec=1, subGroup='Data', isData=True)
+data = sample('data', xsec=1, subGroup='Data', isData=True)
+for s in allDataSamples:
+  data.chain.Add(s.chain)
+
 for s in allICHEPSamples:
   ICHEP.chain.Add(s.chain)
 

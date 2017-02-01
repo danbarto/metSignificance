@@ -13,23 +13,41 @@ ROOT.setTDRStyle()
 ROOT.gROOT.ProcessLineSync('.x nvertReweight.C+')
 
 # Define working points etc
-presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)>=2'
+#presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)>=0&&(abs(jet_eta)>1.9)'
+#presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)==1&&(abs(jet_eta)<0.8)'
+presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)==0'
 types = ['Zmumu','top','EWK','Data']
 
 # Define Labels
-lumiStr = '7.1'
+lumiStr = '27.5'
 nameStr = 'Preliminary'
-addStr  = '2016G'
+addStr  = '2016B-G'
 
 # Define variables to plot
 ToPlot = [
-{'var':'met_sig',   'nBins':50,'xMin':0, 'xMax':100,'name':'Significance'},
-{'var':'met_pt',    'nBins':50,'xMin':0, 'xMax':100,'name':'E_{T}^{miss} (GeV)'},
+#{'var':'jet_sf*jet_sigmapt',   'nBins':100,'xMin':0., 'xMax':.5,'name':'#sigma_{j}'},
+#{'var':'met_sig',   'nBins':50,'xMin':0, 'xMax':100,'name':'Significance'},
+#{'var':'met_pt',    'nBins':50,'xMin':0, 'xMax':100,'name':'E_{T}^{miss} (GeV)'},
+#{'var':'jet_pt', 'nBins':50,'xMin':0, 'xMax':400,'name':'p_{T}(j_{i}) (GeV)'},
+#{'var':'jet_pt*jet_sigmapt+jet_sf', 'nBins':50,'xMin':0, 'xMax':100,'name':'p_{T}(j_{i}) (GeV)'},
+#{'var':'jet_pt*jet_sigmapt*jet_sf', 'nBins':50,'xMin':0, 'xMax':100,'name':'p_{T}(j_{i}) (GeV)'},
+#{'var':'jet_phi*jet_sigmaphi', 'nBins':100,'xMin':-0.5, 'xMax':0.5,'name':'#sigma_{j}'},
+#{'var':'jet_phi', 'nBins':50,'xMin':-3.2, 'xMax':3.2,'name':'#phi(j_{i})'},
 #{'var':'jet_pt[0]', 'nBins':50,'xMin':0, 'xMax':400,'name':'p_{T}(j_{1}) (GeV)'},
 #{'var':'jet_pt[1]', 'nBins':50,'xMin':0, 'xMax':400,'name':'p_{T}(j_{2}) (GeV)'},
+#{'var':'jet_phi[0]', 'nBins':50,'xMin':-3.2, 'xMax':3.2,'name':'#phi(j_{1})'},
+#{'var':'jet_phi[1]', 'nBins':50,'xMin':-3.2, 'xMax':3.2,'name':'#phi(j_{2})'},
+#{'var':'jet_eta[0]', 'nBins':50,'xMin':-5, 'xMax':5,'name':'#eta(j_{1})'},
+#{'var':'jet_eta[1]', 'nBins':50,'xMin':-5, 'xMax':5,'name':'#eta(j_{2})'},
 #{'var':'muon_pt[0]','nBins':50,'xMin':0, 'xMax':200,'name':'p_{T}(#mu_{1}) (GeV)'},
 #{'var':'muon_pt[1]','nBins':50,'xMin':0, 'xMax':200,'name':'p_{T}(#mu_{2}) (GeV)'},
 {'var':'nvertices','nBins':100,'xMin':0, 'xMax':100,'name':'N_{vert}'},
+#{'var':'met_sumpt','nBins':100,'xMin':0, 'xMax':3000,'name':'E_{T} unclustered (GeV)'},
+#{'var':'sqrt(met_sumpt)','nBins':100,'xMin':0, 'xMax':100,'name':'sqrt(E_{T} unclustered) sqrt(GeV)'},
+#{'var':'tune_sumpt',   'nBins':100,'xMin':0., 'xMax':2000.,'name':'#sigma_{j}'}
+#{'var':'tune_jet_sigmapt_eta1_dataShift',   'nBins':100,'xMin':0., 'xMax':100.,'name':'#sigma_{j}'}
+#{'var':'jet_sigmapt[0]*jet_pt[0]',   'nBins':100,'xMin':0., 'xMax':100.,'name':'#sigma_{j} (GeV)'}
+#{'var':'tune_met_sumpt','nBins':100,'xMin':0, 'xMax':3000,'name':'E_{T} unclustered (GeV)'},
 #{'var':'sqrt(2*muon_pt[0]*muon_pt[1]*(cosh(muon_eta[0]-muon_eta[1])-cos(muon_phi[0]-muon_phi[1])))','nBins':60,'xMin':60,'xMax':120,'name':'M(#mu_{1},#mu_{2} (GeV)'},
 ]
 
@@ -44,7 +62,7 @@ color = {
 }
 
 for s in allMCSamples:
-  s.setTargetLumi(7100)
+  s.setTargetLumi(27500)
   s.calculateWeight()
 
 for p in ToPlot:
@@ -59,19 +77,32 @@ for p in ToPlot:
     hists.append(ROOT.TH1F(s.name,s.name,nBins,xMin,xMax))
     hists[-1].SetLineColor(color[s.subGroup])
     hists[-1].SetFillColor(color[s.subGroup])
+    #s.chain.Draw(var+'>>'+s.name,'('+presel+')*('+str(s.weight)+')','goff')
     s.chain.Draw(var+'>>'+s.name,'('+presel+')*('+str(s.weight)+'*nvertReweight(nvertices))','goff')
-  
+    #s.chain.Draw('(-1.20669)**2+0.611**2*met_sumpt>>'+s.name,'('+presel+')*('+str(s.weight)+'*nvertReweight(nvertices))','goff')
+    #s.chain.Draw('jet_sigmapt*jet_sf*jet_pt*1.403>>'+s.name,'('+presel+')*('+str(s.weight)+'*nvertReweight(nvertices))','goff')
+    #s.chain.Draw('jet_sigmapt*jet_pt*1.505>>'+s.name,'('+presel+')*('+str(s.weight)+'*nvertReweight(nvertices))','goff')
+
+
   data_hist = ROOT.TH1F('data','data',nBins,xMin,xMax)
   #data.chain.Draw(var+'>>data',presel,'goff')
   #ICHEP.chain.Draw(var+'>>data',presel,'goff')
-  data2016G.chain.Draw(var+'>>data',presel,'goff')
+  data.chain.Draw(var+'>>data',presel,'goff')
+  #data.chain.Draw('(-0.76865)**2+(0.579)**2*met_sumpt>>data',presel,'goff')
+  #data.chain.Draw('(-0.77+jet_sigmapt*jet_pt*1.481)>>data',presel,'goff')
+  #data2016G.chain.Draw('-0.5066+0.5786*sqrt(met_sumpt)>>data',presel,'goff')
   
+  data_mean = data_hist.GetMean()
+  print 'Data mean:',data_mean
   
   totalH = ROOT.TH1F('total','total',nBins,xMin,xMax)
   stack = ROOT.THStack()
   
   for h in hists:
     totalH.Add(h)
+  
+  mc_mean = totalH.GetMean()
+  print 'MC mean:',mc_mean
   
   print data_hist.Integral(1,nBins+1)
   print totalH.Integral(1,nBins+1)
@@ -185,9 +216,9 @@ for p in ToPlot:
   
   ratio.Draw('e0p same')
   
-  can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016G_Nov16/'+var+'_to'+str(xMax)+'_nvertReweight_njet2_30.png')
-  can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016G_Nov16/'+var+'_to'+str(xMax)+'_nvertReweight_njet2_30.pdf')
-  can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016G_Nov16/'+var+'_to'+str(xMax)+'_nvertReweight_njet2_30.root')
+  can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BCDEFG_Nov16/'+var+'_to'+str(xMax)+'_njetEq0_30_nvertReweight_v4.png')
+  can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BCDEFG_Nov16/'+var+'_to'+str(xMax)+'_njetEq0_30_nvertReweight_v4.pdf')
+  can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BCDEFG_Nov16/'+var+'_to'+str(xMax)+'_njetEq0_30_nvertReweight_v4.root')
   
   obDelete = hists + [stack,ratio,data_hist,totalH,pad1,pad2,leg,one]
   for o in obDelete:

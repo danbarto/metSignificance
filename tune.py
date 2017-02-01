@@ -10,16 +10,16 @@ import json
 
 def main():
 
-  tuneName = 'test_2016G_4jet30.txt'
+  tuneName = '2016BCDEFG_0jet30_smear_comp.txt'
   
   # Define working points etc
-  presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)>=4'
+  presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)>=0'
   sigCut = 9.
   
   #samples = [WW,WZ,ZZ,ST_top,ST_antitop]
   samplesMC   = allMCSamples
   #samplesData = [ICHEP]
-  samplesData = [data2016G]
+  samplesData = [data]
   #samplesData = [data]
   tightZwindow = False
   
@@ -33,6 +33,7 @@ def main():
   el_MC.getPileUpDist()
   
   el_MC.doPileUpReweight(el_data.PUhist)
+  #el_MC.doSmearing(useRand=False)
   el_MC.doSmearing()
   
   samples = {'MC':el_MC, 'data':el_data}
@@ -66,7 +67,7 @@ def main():
     
     variable  = ['a1','a2','a3','a4','a5','N1','S1']
     step      = [0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05]
-    start     = [1.0,  1.0,  1.0,  1.0, 1.0, 0., 0.5]
+    start     = [1.0,  1.0,  1.0,  1.0, 1.0, 0., .5]
     
     print 'Minimizing parameters',variable
     print 'With stepsize of', step

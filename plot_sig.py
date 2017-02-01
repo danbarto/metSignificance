@@ -14,17 +14,17 @@ ROOT.setTDRStyle()
 import json
 
 # Define working points etc
-presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)>=2'
+presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)>=0'
 
 samplesMC   = allMCSamples
-samplesData = [ICHEP]
+samplesData = [data]
 #samplesData = [data]
 isData = False
 
 
 # load chain to list
-el_data = eventlist( samplesData, presel )
-el_MC   = eventlist( samplesMC, presel )
+el_data = eventlist( samplesData, presel, isData=True, tiny=False )
+el_MC   = eventlist( samplesMC, presel, isData=False, tiny=False  )
 
 del samplesData, samplesMC
 
@@ -33,13 +33,13 @@ el_MC.getPileUpDist()
 
 el_MC.doPileUpReweight(el_data.PUhist)
 
-el_MC.doJetSmearing(False)
-el_data.doJetSmearing(False)
+el_MC.doSmearing()
+#el_data.doJetSmearing(False)
 
-with open('data/MC_tune_ICHEP_2jet30.txt', 'r') as paraMC:
+with open('data/MC_2016BCDEFG_0jet30_smear.txt', 'r') as paraMC:
   parMC = json.load(paraMC)
 
-with open('data/data_tune_2016G_2jet30.txt', 'r') as paraData:
+with open('data/data_2016BCDEFG_0jet30_smear.txt', 'r') as paraData:
   parData = json.load(paraData)
 
 el_MC.getLL(parMC)
@@ -176,7 +176,7 @@ one.Draw('same')
 
 ratio.Draw('e0p same')
 
-can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016G_Nov16/significanceTune_njet2_30.png')
-can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016G_Nov16/significanceTune_njet2_30.pdf')
-can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016G_Nov16/significanceTune_njet2_30.root')
+can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BCDEFG_Nov16/significanceTune_njet0_30_smear_highStat_red3_smearedInPlot.png')
+can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BCDEFG_Nov16/significanceTune_njet0_30_smear_highStat_red3_smearedInPlot.pdf')
+can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BCDEFG_Nov16/significanceTune_njet0_30_smear_highStat_red3_smearedInPlot.root')
 

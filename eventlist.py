@@ -38,7 +38,7 @@ class event:
   def getMuonInvMass(self):
     self.muonInvMass = math.sqrt(2*self.muon_pt[0]*self.muon_pt[1]*(math.cosh(self.muon_eta[0]-self.muon_eta[1])-math.cos(self.muon_phi[0]-self.muon_phi[1])))
   
-  def smearJets(self):
+  def smearJets(self, useRand=True):
     dmet_x       = 0
     dmet_y       = 0
     jet_pt = self.jet_pt
@@ -48,7 +48,8 @@ class event:
       j_phi = self.jet_phi[i]
       j_sigmapt = self.jet_sigmapt[i]
       if( j_sf < 1 ): j_sf = 1
-      rd = rand.Gaus(0, math.sqrt((j_sf*j_sf)-1))
+      if useRand: rd = rand.Gaus(0, math.sqrt((j_sf*j_sf)-1))
+      else: rd = 0.
       sm = rd * j_sigmapt*j_pt
       cj = math.cos(j_phi)
       sj = math.sin(j_phi)
@@ -113,7 +114,7 @@ class event:
 
 
 class eventlist:
-  def __init__(self, samples, cut, isData, tiny=False):
+  def __init__(self, samples, cut, isData, tiny=False, reduction=True):
     self.evlist   = []
     self.cut      = cut
     self.args     = []
@@ -125,10 +126,15 @@ class eventlist:
       elist = ROOT.gDirectory.Get("eList")
       number_events = elist.GetN()
       print "Sample",s.name,", looping over " + str(number_events) + " events"
-    
+      if reduction:
+        redFactor = int(number_events/4e6)
+        if redFactor ==0: redFactor = 1 
+      else:
+        redFactor = 1
+      if isData: print "will reduce sample size by", redFactor
       #Event Loop starts here
       #temp = (event(weight,s,i,elist) for i in range(number_events))
-      temp = [event(weight,s,i,elist, isData, tiny=tiny) for i in range(number_events)]
+      temp = [event(weight,s,i,elist, isData, tiny=tiny) for i in range(number_events) if (i%int(redFactor)==0 or not isData) ]
       self.evlist = self.evlist + temp
       del temp
   
@@ -153,9 +159,10 @@ class eventlist:
       if PUweight <= 0: PUweight = minx
       ev.weight *= PUweight
   
-  def doSmearing(self):
-    for x in self.evlist: x.smearJets()
-    print 'Smeared jets'
+  def doSmearing(self, useRand=True):
+    for x in self.evlist: x.smearJets( useRand = useRand )
+    if useRand: print 'Smeared jets'
+    else: print 'Applied JER scale factors, no smearing done!'
   
   def getLL(self, args):
     self.LL   = 0.

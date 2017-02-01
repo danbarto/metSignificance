@@ -15,6 +15,12 @@ class samples:
     self.chain.Add(rootfiles)
     self.skimreport = skimreport
     self.sumweight = 1
+    if skimreport:
+        const = 'All Events' if self.isData else 'Sum Weights'
+        logfile = self.skimreport
+        line = [x for x in subprocess.check_output(["cat", logfile]).split('\n') if x.count(const)]
+        assert len(line)==1,"Didn't find normalization constant '%s' in  number in file %s"%(const, logfile)
+        self.sumweight = float(line[0].split()[2])
 
 #  def defineSample(self, name, treeName='events', isData=False, subGroup = None, xsec=1.):
 #    self.name     = name
