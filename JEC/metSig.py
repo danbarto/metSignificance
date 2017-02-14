@@ -32,19 +32,20 @@ class metSig:
     
     def getJetCovariance(self, event, jec=''):
             
-        if 'up' in jec.lower():
-            jec = '_jecUp'
-        if 'down' in jec.lower():
-            jec = '_jecDown'
-
+        if 'jecup' in jec.lower():
+            jec_ = '_jecUp'
+        elif 'jecdown' in jec.lower():
+            jec_ = '_jecDown'
+        else: jec_ = ''
+        
         cov_xx       = 0
         cov_xy       = 0
         cov_yy       = 0
 
         #load stuff
-        jet_pt  = getattr(event, 'jet'+jec+'_pt')
-        jet_phi = getattr(event, 'jet'+jec+'_phi')
-        jet_eta = getattr(event, 'jet'+jec+'_eta')
+        jet_pt  = getattr(event, 'jet'+jec_+'_pt')
+        jet_phi = getattr(event, 'jet'+jec_+'_phi')
+        jet_eta = getattr(event, 'jet'+jec_+'_eta')
         rho     = event.rho
         nJets   = len([x for x in jet_pt if x>self.jetThreshold])
         
@@ -109,15 +110,20 @@ class metSig:
        
     def getMetSig(self, event, jec=''):
 
-        if 'up' in jec.lower():
-            jec = '_jecUp'
-        if 'down' in jec.lower():
-            jec = '_jecDown'
-
-        met_pt      = getattr(event, 'met'+jec+'_pt')
-        met_phi     = getattr(event, 'met'+jec+'_phi')
+        if 'jecup' in jec.lower():
+            jec_ = '_jecUp'
+        elif 'jecdown' in jec.lower():
+            jec_ = '_jecDown'
+        else: jec_=''
+        
+        met_pt      = getattr(event, 'met'+jec_+'_pt')
+        met_phi     = getattr(event, 'met'+jec_+'_phi')
         
         sum_pt = self.getSumPt(event)
+        if 'sumptup' in jec.lower() and sum_pt>0:
+            sum_pt += math.sqrt(sum_pt)
+        if 'sumptdown' in jec.lower() and sum_pt>0:
+            sum_pt -= math.sqrt(sum_pt)
         cov_xx, cov_xy, cov_yy = self.getJetCovariance(event, jec=jec)
         cov_uncl = self.unc_args[0]**2 + self.unc_args[1]**2 * sum_pt
         cov_xx += cov_uncl
@@ -134,7 +140,7 @@ class metSig:
         
         sig = met_x*met_x*ncov_xx + 2*met_x*met_y*ncov_xy + met_y*met_y*ncov_yy
         
-        unc_sig = self.getUnclusteredMetSig(event)
-        print "{:10}{:10.2f}{:10.2f}{:10.2f}{:15.4f}{:15.4f}{:10.1f}".format(jec,met_pt, met_phi, sum_pt, sig, unc_sig, det)
+        #unc_sig = self.getUnclusteredMetSig(event)
+        #print "{:10}{:10.2f}{:10.2f}{:10.2f}{:15.4f}{:15.4f}{:10.1f}".format(jec,met_pt, met_phi, sum_pt, sig, unc_sig, det)
         
         return sig
