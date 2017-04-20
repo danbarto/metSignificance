@@ -10,14 +10,15 @@ import json
 
 def main():
 
-  tuneName = '2016BCDEFG_0jet30_smear_comp.txt'
+  tuneName = '2016BH_njet1p.txt'
   
   # Define working points etc
-  presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)>=0'
+  presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)>=1'
   sigCut = 9.
   
   #samples = [WW,WZ,ZZ,ST_top,ST_antitop]
   samplesMC   = allMCSamples
+  #samplesMC   = [DY]
   #samplesData = [ICHEP]
   samplesData = [data]
   #samplesData = [data]
@@ -34,7 +35,7 @@ def main():
   
   el_MC.doPileUpReweight(el_data.PUhist)
   #el_MC.doSmearing(useRand=False)
-  el_MC.doSmearing()
+  #el_MC.doSmearing()
   
   samples = {'MC':el_MC, 'data':el_data}
   #samples = {'MC':el_MC}

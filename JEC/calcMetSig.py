@@ -1,6 +1,6 @@
 import ROOT
 
-from metSig import *
+from metSignificance.tools.metSig import *
 from metSignificance.tools.samples import samples as sample
 
 #ROOT.gStyle.Reset()

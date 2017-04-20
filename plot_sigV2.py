@@ -14,7 +14,7 @@ ROOT.setTDRStyle()
 import json
 
 # Define working points etc
-presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)==0'
+presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)>=0'
 
 samplesMC   = allMCSamples
 samplesData = [data]
@@ -23,18 +23,6 @@ isData = False
 
 
 # load chain to list
-el_data = eventlist( samplesData, presel, isData=True, tiny=False, reduction=False )
-el_MC   = eventlist( samplesMC, presel, isData=False, tiny=False, reduction=True  )
-
-del samplesData, samplesMC
-
-el_data.getPileUpDist()
-el_MC.getPileUpDist()
-
-el_MC.doPileUpReweight(el_data.PUhist)
-
-#el_MC.doSmearing()
-#el_data.doJetSmearing(False)
 
 with open('data/MC_2016BH_njet0p.txt', 'r') as paraMC:
   parMC = json.load(paraMC)
@@ -42,18 +30,67 @@ with open('data/MC_2016BH_njet0p.txt', 'r') as paraMC:
 with open('data/data_2016BH_njet0p.txt', 'r') as paraData:
   parData = json.load(paraData)
 
-el_MC.getLL(parMC)
-el_data.getLL(parData)
+def getBin(abseta):
+  for i, a in enumerate(etabins):
+    if abseta < a:
+      return int(i)
+      break
+
+
+def getSig(jet_pt, jet_sigmapt, jet_phi, jet_sigmaphi, jet_eta, met_pt, met_phi, met_sumpt, args):
+  cov_xx       = 0
+  cov_xy       = 0
+  cov_yy       = 0
+  i = 0
+  for j in jet_pt:
+    j_pt = j
+    j_phi = jet_phi[i]
+    j_sigmapt = jet_sigmapt[i]
+    j_sigmaphi = jet_sigmaphi[i]
+    index = getBin(abs(jet_eta[i]))
+
+    cj = math.cos(j_phi)
+    sj = math.sin(j_phi)
+    dpt = args[index] * j_pt * j_sigmapt
+    dph =               j_pt * j_sigmaphi
+
+    dpt *= dpt
+    dph *= dph
+
+    cov_xx += dpt*cj*cj + dph*sj*sj
+    cov_xy += (dpt-dph)*cj*sj
+    cov_yy += dph*cj*cj + dpt*sj*sj
+
+    i += 1
+
+  # unclustered energy
+  cov_tt = args[5]*args[5] + args[6]*args[6]*met_sumpt
+  cov_xx += cov_tt
+  cov_yy += cov_tt
+
+  det = cov_xx*cov_yy - cov_xy*cov_xy
+
+  ncov_xx =  cov_yy / det
+  ncov_xy = -cov_xy / det
+  ncov_yy =  cov_xx / det
+
+  met_x = met_pt * math.cos(met_phi)
+  met_y = met_pt * math.sin(met_phi)
+
+  sig = met_x*met_x*ncov_xx + 2*met_x*met_y*ncov_xy + met_y*met_y*ncov_yy
+  return sig
+
+
 
 # Histograms
 types = ['Zmumu','top','EWK','Data']
 nBins = 25
 maxSig = 50
 
-nMC = 0.
-for ev in el_MC.evlist: nMC += ev.weight
-nData = len(el_data.evlist)
-scale = nData/nMC
+#nMC = 0.
+#for ev in el_MC.evlist: nMC += ev.weight
+#nData = len(el_data.evlist)
+#scale = nData/nMC
 
 sig_hist = {}
 for t in types:
@@ -61,18 +98,59 @@ for t in types:
 
 totalH = ROOT.TH1F('total','total',nBins,0,maxSig)
 
-for ev in el_MC.evlist + el_data.evlist:
-  if ev.group is not 'Data':
-    weight = ev.weight*scale
-    totalH.Fill(ev.sig,weight)
-  else: weight = 1
-  sig_hist[ev.group].Fill(ev.sig, weight)
+samples = allMCSamples + [data]
 
-stack = ROOT.THStack()
+print presel
+
+for s in samples:
+
+    weight = s.weight
+    s.chain.Draw('>>eList', presel)
+    elist = ROOT.gDirectory.Get("eList")
+    number_events = elist.GetN()
+    print "Sample",s.name,", looping over " + str(number_events) + " events"
+    
+    if s.isData: args = parData
+    else: args = parMC
+    for i in range(number_events):
+        if i%1000==0: print "Done with ", i
+        s.chain.GetEntry(elist.GetEntry(i))
+        sig = getSig(s.chain.jet_pt, s.chain.jet_sigmapt, s.chain.jet_phi, s.chain.jet_sigmaphi, s.chain.jet_eta, s.chain.met_pt, s.chain.met_phi, s.chain.met_sumpt, args)
+        sig_hist[s.subGroup].Fill(sig, s.weight)
+
+
+print "Done with eventloop"
 
 for h in sig_hist:
   sig_hist[h].SetBinContent(nBins, sig_hist[h].GetBinContent(nBins)+sig_hist[h].GetBinContent(nBins+1))
-totalH.SetBinContent(nBins, totalH.GetBinContent(nBins)+totalH.GetBinContent(nBins+1))
+
+for h in sig_hist:
+    if h != "Data":
+        totalH.Add(sig_hist[h])
+
+nMC = totalH.Integral()
+nData = sig_hist["Data"].Integral()
+
+SF = nData/nMC
+print "SF is", SF
+
+for h in sig_hist:
+    if h != "Data":
+        sig_hist[h].Scale(SF)
+totalH.Scale(SF)
+
+#totalH.SetBinContent(nBins, totalH.GetBinContent(nBins)+totalH.GetBinContent(nBins+1))
+
+
+stack = ROOT.THStack()
+
+#for h in sig_hist:
+#  sig_hist[h].SetBinContent(nBins, sig_hist[h].GetBinContent(nBins)+sig_hist[h].GetBinContent(nBins+1))
+#
+#for h in sig_hist:
+#    if h not "Data":
+#        totalH.Add(sig_hist[h])
+#totalH.SetBinContent(nBins, totalH.GetBinContent(nBins)+totalH.GetBinContent(nBins+1))
 
 sig_hist['EWK'].SetFillColor(ROOT.kAzure-9)
 sig_hist['EWK'].SetLineColor(ROOT.kAzure-9)
@@ -176,7 +254,7 @@ one.Draw('same')
 
 ratio.Draw('e0p same')
 
-can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BH_Moriond17_rerunApril/Feb15tune_njetEq0.png')
-can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BH_Moriond17_rerunApril/Feb15tune_njetEq0.pdf')
-can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BH_Moriond17_rerunApril/Feb15tune_njetEq0.root')
+can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BH_Moriond17_rerunApril/Feb15tune_njetGEq0_v2.png')
+can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BH_Moriond17_rerunApril/Feb15tune_njetGEq0_v2.pdf')
+can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BH_Moriond17_rerunApril/Feb15tune_njetGEq0_v2.root')
 

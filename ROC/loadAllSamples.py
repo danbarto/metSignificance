@@ -2,7 +2,7 @@
 from metSignificance.tools.samples import samples as sample
 import math
 
-basedir = '/afs/hephy.at/data/dspitzbart01/MetSig/METtuples_Spring16/'
+basedir = '/afs/hephy.at/data/dspitzbart02/MetSig/METtuples_Spring16/'
 
 # load samples
 
