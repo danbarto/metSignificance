@@ -1,6 +1,8 @@
 import ROOT
 
-from loadAllSamples_aprilRerun import *
+from loadAllSamples_August import *
+#from loadAllSamples_1e import *
+
 from eventlist import *
 from likelihood import *
 #from helpers import *
@@ -11,23 +13,38 @@ ROOT.gROOT.LoadMacro('tdrstyle.C')
 ROOT.setTDRStyle()
 #ROOT.gStyle.SetOptStat(111111)
 
+from metSignificance.tools.jackknife import *
+
 import json
 
 # Define working points etc
 presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)>=0'
+#presel = 'Sum$(jet_pt>50&&abs(jet_eta)<2.5&&jet_passid)>=0 && nvertices>=0&&nvertices<5'
+#presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)==0 && Sum$(ele_pt>50&&abs(ele_eta)<2.1&&ele_tight==1)==1 && Sum$(ele_pt>20&&abs(ele_eta)<2.4&&ele_loose==1)==1'#&&nvertices<10'
 
 samplesMC   = allMCSamples
 samplesData = [data]
 #samplesData = [data]
 isData = False
+PUreweight = True
 
+PU_file = ROOT.TFile("data/nvert_2016BH_0pjets.root","READ")
+PU_hist = PU_file.Get("data").Clone("h")
+#PU_hist = tmp_hist.Clone()
+#PU_file.Close()
+
+def cartesian(pt, phi):
+    return (pt*math.cos(phi), pt*math.sin(phi))
 
 # load chain to list
 
-with open('data/MC_2016BH_njet0p.txt', 'r') as paraMC:
+#with open('data/MC_2016BH_njet0p.txt', 'r') as paraMC:
+#with open('data/MC_april_jack_2016BH_njet0p_v2.txt', 'r') as paraMC:
+with open('data/MC_august_2016BH_njet0p_August_v2.txt', 'r') as paraMC:
   parMC = json.load(paraMC)
 
-with open('data/data_2016BH_njet0p.txt', 'r') as paraData:
+#with open('data/data_2016BH_njet0p.txt', 'r') as paraData:
+with open('data/data_august_2016BH_njet0p_August_v2.txt', 'r') as paraData:
   parData = json.load(paraData)
 
 def getBin(abseta):
@@ -80,11 +97,54 @@ def getSig(jet_pt, jet_sigmapt, jet_phi, jet_sigmaphi, jet_eta, met_pt, met_phi,
   sig = met_x*met_x*ncov_xx + 2*met_x*met_y*ncov_xy + met_y*met_y*ncov_yy
   return sig
 
+def getSigAlt(jet_pt, jet_sigmapt, jet_phi, jet_sigmaphi, jet_eta, met_pt, met_phi, met_sumpt, c_xx, c_xy, c_yy, args):
+  cov_xx       = 0
+  cov_xy       = 0
+  cov_yy       = 0
+  i = 0
+  for j in jet_pt:
+    j_pt = j
+    j_phi = jet_phi[i]
+    j_sigmapt = jet_sigmapt[i]
+    j_sigmaphi = jet_sigmaphi[i]
+    index = getBin(abs(jet_eta[i]))
+
+    cj = math.cos(j_phi)
+    sj = math.sin(j_phi)
+    dpt = args[index] * j_pt * j_sigmapt
+    dph =               j_pt * j_sigmaphi
+
+    dpt *= dpt
+    dph *= dph
+
+    cov_xx += dpt*cj*cj + dph*sj*sj
+    cov_xy += (dpt-dph)*cj*sj
+    cov_yy += dph*cj*cj + dpt*sj*sj
+
+    i += 1
+
+  # unclustered energy
+  cov_xx += args[5]**2 * c_xx
+  cov_xy += args[5]*args[6] * c_xy
+  cov_yy += args[6]**2 * c_yy
+
+
+  det = cov_xx*cov_yy - cov_xy*cov_xy
+
+  ncov_xx =  cov_yy / det
+  ncov_xy = -cov_xy / det
+  ncov_yy =  cov_xx / det
+
+  met_x = met_pt * math.cos(met_phi)
+  met_y = met_pt * math.sin(met_phi)
+
+  sig = met_x*met_x*ncov_xx + 2*met_x*met_y*ncov_xy + met_y*met_y*ncov_yy
+  return sig
 
 
 # Histograms
-types = ['Zmumu','top','EWK','Data']
-nBins = 25
+types = ['wjets','Zmumu','top','EWK','Data', 'QCD','gamma']
+nBins = 50#200 #200
 maxSig = 50
 
 #nMC = 0.
@@ -103,7 +163,7 @@ samples = allMCSamples + [data]
 print presel
 
 for s in samples:
-
+    print s.subGroup
     weight = s.weight
     s.chain.Draw('>>eList', presel)
     elist = ROOT.gDirectory.Get("eList")
@@ -112,11 +172,22 @@ for s in samples:
     
     if s.isData: args = parData
     else: args = parMC
+    args2 = [ a*1 for a in args ]
     for i in range(number_events):
-        if i%1000==0: print "Done with ", i
+        if i%100000==0: print "Done with ", i
         s.chain.GetEntry(elist.GetEntry(i))
-        sig = getSig(s.chain.jet_pt, s.chain.jet_sigmapt, s.chain.jet_phi, s.chain.jet_sigmaphi, s.chain.jet_eta, s.chain.met_pt, s.chain.met_phi, s.chain.met_sumpt, args)
-        sig_hist[s.subGroup].Fill(sig, s.weight)
+        #cands_vec = []
+        #for j,c in enumerate(s.chain.cand_pt):
+        #    if c>0:
+        #        cands_vec.append(cartesian(s.chain.cand_pt[j], s.chain.cand_phi[j]))
+        #cov = jackknifeMultiDim(cands_vec,1)
+        sig = getSig(s.chain.jet_pt, s.chain.jet_sigmapt, s.chain.jet_phi, s.chain.jet_sigmaphi, s.chain.jet_eta, s.chain.met_pt, s.chain.met_phi, s.chain.met_sumpt, args2)
+        #sig = getSigAlt(s.chain.jet_pt, s.chain.jet_sigmapt, s.chain.jet_phi, s.chain.jet_sigmaphi, s.chain.jet_eta, s.chain.met_pt, s.chain.met_phi, s.chain.met_sumpt, s.chain.cov_xx, s.chain.cov_xy, s.chain.cov_yy, args)
+        if (s.subGroup is not "Data") and PUreweight:
+            PU_weight = PU_hist.GetBinContent(PU_hist.FindBin(s.chain.nvertices))
+        else:
+            PU_weight = 1
+        sig_hist[s.subGroup].Fill(sig, s.weight*PU_weight)
 
 
 print "Done with eventloop"
@@ -161,10 +232,24 @@ sig_hist['top'].SetLineColor(ROOT.kRed-9)
 sig_hist['Zmumu'].SetFillColor(ROOT.kYellow-9)
 sig_hist['Zmumu'].SetLineColor(ROOT.kYellow-9)
 
+#sig_hist['gamma'].SetFillColor(ROOT.kOrange)
+#sig_hist['gamma'].SetLineColor(ROOT.kOrange)
+#
+#sig_hist['QCD'].SetFillColor(ROOT.kGreen+2)
+#sig_hist['QCD'].SetLineColor(ROOT.kGreen+2)
+#
+#sig_hist['wjets'].SetFillColor(ROOT.kCyan+1)
+#sig_hist['wjets'].SetLineColor(ROOT.kCyan+1)
+
 
 stack.Add(sig_hist['top'])
 stack.Add(sig_hist['EWK'])
 stack.Add(sig_hist['Zmumu'])
+#stack.Add(sig_hist['gamma'])
+#stack.Add(sig_hist['QCD'])
+#stack.Add(sig_hist['wjets'])
+
+
 
 const = sig_hist['Data'].GetBinContent(1)
 const = const/ROOT.TMath.Exp(-(float(maxSig)/nBins)/4.)
@@ -201,11 +286,12 @@ chi2_2.Draw('same')
 
 sig_hist['Data'].SetMarkerStyle(8)
 sig_hist['Data'].SetMarkerSize(1)
-sig_hist['Data'].SetLineWidth(0)
+sig_hist['Data'].SetLineWidth(1)
 sig_hist['Data'].SetLineColor(ROOT.kBlack)
 sig_hist['Data'].Draw('e0p same')
 
-leg = ROOT.TLegend(0.75,0.68,0.95,0.90)
+#leg = ROOT.TLegend(0.75,0.58,0.95,0.90)
+leg = ROOT.TLegend(0.75,0.70,0.95,0.90)
 leg.SetFillColor(ROOT.kWhite)
 leg.SetShadowColor(ROOT.kWhite)
 leg.SetBorderSize(0)
@@ -213,9 +299,26 @@ leg.SetTextSize(0.04)
 leg.AddEntry(sig_hist['Data'],'Data')
 leg.AddEntry(chi2_2,'#chi^{2} d.o.f 2','l')
 leg.AddEntry(sig_hist['Zmumu'],'Z #rightarrow #mu#mu','f')
-leg.AddEntry(sig_hist['top'],'top','f')
+#leg.AddEntry(sig_hist['wjets'],'W+jets','f')
+#leg.AddEntry(sig_hist['QCD'],'QCD multijet','f')
+#leg.AddEntry(sig_hist['gamma'],'#gamma+jets','f')
+#leg.AddEntry(sig_hist['Zmumu'],'Drell-Yan','f')
 leg.AddEntry(sig_hist['EWK'],'EWK','f')
+leg.AddEntry(sig_hist['top'],'top','f')
 leg.Draw()
+
+nameStr = "Preliminary"
+addStr  = ""
+lumiStr = "35.9"
+
+latex2 = ROOT.TLatex()
+latex2.SetNDC()
+latex2.SetTextSize(0.04)
+latex2.SetTextAlign(11)
+latex2.DrawLatex(0.15,0.96,'CMS #bf{#it{'+nameStr+'}}')
+latex2.DrawLatex(0.5,0.96,addStr)
+latex2.DrawLatex(0.88,0.96,lumiStr+'fb^{-1}')
+
 
 can.cd()
 
@@ -226,6 +329,18 @@ pad2.SetTopMargin(0.04)
 pad2.Draw()
 pad2.cd()
 
+MCratio = ROOT.TH1F('MCratio','',nBins,0,maxSig)
+MCratio.Sumw2()
+MCratio = totalH.Clone()
+MCratio.Divide(totalH)
+MCratioErr = ROOT.TGraphAsymmErrors(MCratio)
+MCratioErr.SetFillColor(ROOT.kGray+1)
+MCratioErr.SetFillStyle(3244)
+for p in range(0,nBins):
+  MCratioErr.SetPointEXlow(p,maxSig/(2*nBins))
+  MCratioErr.SetPointEXhigh(p,maxSig/(2*nBins))
+
+
 ratio = ROOT.TH1F('ratio','',nBins,0,maxSig)
 ratio.Sumw2()
 ratio = sig_hist['Data'].Clone()
@@ -233,7 +348,7 @@ ratio.Divide(totalH)
 ratio.SetLineColor(ROOT.kBlack)
 ratio.SetMarkerStyle(8)
 ratio.SetMarkerSize(1)
-ratio.SetLineWidth(0)
+ratio.SetLineWidth(1)
 ratio.GetXaxis().SetTitle('')
 ratio.SetMaximum(2.01)
 ratio.SetMinimum(0.)
@@ -246,6 +361,7 @@ ratio.GetYaxis().SetTitle('Data/MC')
 ratio.GetYaxis().SetTitleSize(0.13)
 ratio.GetYaxis().SetTitleOffset(0.45)
 ratio.Draw('e0p')
+MCratioErr.Draw('2 same')
 
 one = ROOT.TF1("one","1",0,maxSig)
 one.SetLineColor(ROOT.kRed+1)
@@ -254,7 +370,9 @@ one.Draw('same')
 
 ratio.Draw('e0p same')
 
-can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BH_Moriond17_rerunApril/Feb15tune_njetGEq0_v2.png')
-can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BH_Moriond17_rerunApril/Feb15tune_njetGEq0_v2.pdf')
-can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BH_Moriond17_rerunApril/Feb15tune_njetGEq0_v2.root')
+plot_file = '/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BH_August_v1/met_sig_to50_njetGEq0_nvertReweight_reTune'
+
+can.Print(plot_file+'.png')
+can.Print(plot_file+'.pdf')
+can.Print(plot_file+'.root')
 

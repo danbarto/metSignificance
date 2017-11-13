@@ -1,6 +1,6 @@
 import ROOT
 
-from loadAllSamples_aprilRerun import *
+from loadAllSamples_August import *
 from eventlist import *
 from likelihood import *
 #from helpers import *
@@ -14,7 +14,7 @@ ROOT.setTDRStyle()
 import json
 
 # Define working points etc
-presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)==0'
+presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)>=0'
 
 samplesMC   = allMCSamples
 samplesData = [data]
@@ -36,10 +36,10 @@ el_MC.doPileUpReweight(el_data.PUhist)
 #el_MC.doSmearing()
 #el_data.doJetSmearing(False)
 
-with open('data/MC_2016BH_njet0p.txt', 'r') as paraMC:
+with open('data/MC_august_2016BH_njet0p_August_v1.txt', 'r') as paraMC:
   parMC = json.load(paraMC)
 
-with open('data/data_2016BH_njet0p.txt', 'r') as paraData:
+with open('data/data_august_2016BH_njet0p_August_v1', 'r') as paraData:
   parData = json.load(paraData)
 
 el_MC.getLL(parMC)
@@ -176,7 +176,7 @@ one.Draw('same')
 
 ratio.Draw('e0p same')
 
-can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BH_Moriond17_rerunApril/Feb15tune_njetEq0.png')
-can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BH_Moriond17_rerunApril/Feb15tune_njetEq0.pdf')
-can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BH_Moriond17_rerunApril/Feb15tune_njetEq0.root')
+can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BH_August_v1/met_sig_Aug15tune_njetGEq0.png')
+can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BH_August_v1/met_sig_Aug15tune_njetGEq0.pdf')
+can.Print('/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BH_August_v1/met_sig_Aug15tune_njetGEq0.root')
 

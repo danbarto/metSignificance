@@ -1,5 +1,7 @@
 import ROOT
 import math
+from metSignificance.tools.jackknife import *
+import random
 
 rand = ROOT.TRandom3(10**6+1)
 
@@ -16,41 +18,65 @@ def cartesian(pt, phi):
     return (pt*math.cos(phi), pt*math.sin(phi))
 
 class event:
-  def __init__(self, weight, sample, i, elist, isData, tiny=False, unc_cov=True):
-    sample.chain.GetEntry(elist.GetEntry(i))
+  #def __init__(self, weight, sample, i, elist, isData, tiny=False, unc_cov=True):
+  #  sample.chain.GetEntry(elist.GetEntry(i))
+  #  self.weight       = weight
+  #  self.jet_pt       = [x for x in sample.chain.jet_pt]
+  #  self.jet_sigmapt  = [x for x in sample.chain.jet_sigmapt]
+  #  self.jet_phi      = [x for x in sample.chain.jet_phi]
+  #  self.jet_sigmaphi = [x for x in sample.chain.jet_sigmaphi]
+  #  self.jet_etabin   = [getBin(abs(x)) for x in sample.chain.jet_eta]
+
+  #  if not isData:
+  #    self.jet_sf     = [x for x in sample.chain.jet_sf]
+
+  #  self.met_pt       = sample.chain.met_pt
+  #  self.met_phi      = sample.chain.met_phi
+  #  self.met_sumpt    = sample.chain.met_sumpt
+  #  self.nvert        = sample.chain.nvertices
+  #  self.sig          = 0.
+  #  self.det          = 0.
+
+  #  if unc_cov:
+  #      cands_vec = []
+  #      for j,c in enumerate(sample.chain.cand_pt):
+  #          if c>0:
+  #              cands_vec.append(cartesian(sample.chain.cand_pt[j], sample.chain.cand_phi[j]))
+  #      cov = jackknifeMultiDim(cands_vec,1)
+  #      self.unc_cov_xx     = cov[0][0]
+  #      self.unc_cov_xy     = cov[0][1]
+  #      self.unc_cov_yy     = cov[1][1]
+  #      print len(cands_vec)
+  #      del cands_vec, cov
+  #      print self.unc_cov_xx,self.unc_cov_xy,self.unc_cov_yy
+
+  #  if not tiny:
+  #    self.group        = sample.subGroup
+  #    self.muon_pt      = [x for x in sample.chain.muon_pt]
+  #    self.muon_eta     = [x for x in sample.chain.muon_eta]
+  #    self.muon_phi     = [x for x in sample.chain.muon_phi]
+  
+  def __init__(self, weight, jet_pt,jet_sigmapt,jet_phi,jet_sigmaphi,jet_etabin,jet_sf,met_pt,met_phi,met_sumpt,nvertices,c_xx,c_xy,c_yy):
     self.weight       = weight
-    self.jet_pt       = [x for x in sample.chain.jet_pt]
-    self.jet_sigmapt  = [x for x in sample.chain.jet_sigmapt]
-    self.jet_phi      = [x for x in sample.chain.jet_phi]
-    self.jet_sigmaphi = [x for x in sample.chain.jet_sigmaphi]
-    self.jet_etabin   = [getBin(abs(x)) for x in sample.chain.jet_eta]
+    self.jet_pt       = jet_pt
+    self.jet_sigmapt  = jet_sigmapt
+    self.jet_phi      = jet_phi
+    self.jet_sigmaphi = jet_sigmaphi
+    self.jet_etabin   = jet_etabin
+    self.jet_sf       = jet_sf 
 
-    if not isData:
-      self.jet_sf     = [x for x in sample.chain.jet_sf]
-
-    self.met_pt       = sample.chain.met_pt
-    self.met_phi      = sample.chain.met_phi
-    self.met_sumpt    = sample.chain.met_sumpt
-    self.nvert        = sample.chain.nvertices
+    self.met_pt       = met_pt
+    self.met_phi      = met_phi
+    self.met_sumpt    = met_sumpt
+    self.nvert        = nvertices
     self.sig          = 0.
     self.det          = 0.
 
-    if unc_cov:
-        cands_vec = []
-        for j,c in enumerate(sample.chain.cand_pt):
-            if c>0:
-                cands_vec.append(cartesian(sample.chain.cand_pt[j], sample.chain.cand_phi[j]))
-        cov = jackknifeMultiDim(cands_vec,1)
-        self.unc_cov_xx     = cov[0][0]
-        self.unc_cov_xy     = cov[0][1]
-        self.unc_cov_yy     = cov[1][1]
+    self.unc_cov_xx     = c_xx#cov[0][0]
+    self.unc_cov_xy     = c_xy#cov[0][1]
+    self.unc_cov_yy     = c_yy#cov[1][1]
 
-    if not tiny:
-      self.group        = sample.subGroup
-      self.muon_pt      = [x for x in sample.chain.muon_pt]
-      self.muon_eta     = [x for x in sample.chain.muon_eta]
-      self.muon_phi     = [x for x in sample.chain.muon_phi]
-
+  
   def getMuonInvMass(self):
     self.muonInvMass = math.sqrt(2*self.muon_pt[0]*self.muon_pt[1]*(math.cosh(self.muon_eta[0]-self.muon_eta[1])-math.cos(self.muon_phi[0]-self.muon_phi[1])))
   
@@ -117,9 +143,15 @@ class event:
 
     det = cov_xx*cov_yy - cov_xy*cov_xy
 
-    ncov_xx =  cov_yy / det
-    ncov_xy = -cov_xy / det
-    ncov_yy =  cov_xx / det
+    if det>0:
+        ncov_xx =  cov_yy / det
+        ncov_xy = -cov_xy / det
+        ncov_yy =  cov_xx / det
+    else:
+        print cov_xx, cov_yy, cov_xy
+        ncov_xx = cov_xx if cov_xx > 0 else 1
+        ncov_yy = cov_yy if cov_yy > 0 else 1
+        ncov_xy = cov_xy if cov_xy > 0 else 1
 
     met_x = self.met_pt * math.cos(self.met_phi)
     met_y = self.met_pt * math.sin(self.met_phi)
@@ -151,16 +183,20 @@ class event:
       cov_xx += dpt*cj*cj + dph*sj*sj
       cov_xy += (dpt-dph)*cj*sj
       cov_yy += dph*cj*cj + dpt*sj*sj
-
+      #print cov_xx, cov_xy, cov_yy
+      
       i += 1
 
     # unclustered energy
-    cov_xx += args[5] * self.unc_cov_xx
-    cov_xy += args[6] * self.unc_cov_xy
-    cov_yy += args[7] * self.unc_cov_yy
+    cov_xx += args[5]**2 * self.unc_cov_xx
+    cov_xy += args[5]*args[6] * self.unc_cov_xy
+    cov_yy += args[6]**2 * self.unc_cov_yy
+    #cov_xy += args[6]**2 * self.unc_cov_xy
+    #cov_yy += args[7]**2 * self.unc_cov_yy
 
     det = cov_xx*cov_yy - cov_xy*cov_xy
-
+    #print cov_xx, cov_xy, cov_yy
+    
     ncov_xx =  cov_yy / det
     ncov_xy = -cov_xy / det
     ncov_yy =  cov_xx / det
@@ -180,7 +216,7 @@ class eventlist:
     self.args     = []
 
     for s in samples:
-    
+      total_events = s.chain.GetEntries()
       weight = s.weight
       s.chain.Draw('>>eList',self.cut)
       elist = ROOT.gDirectory.Get("eList")
@@ -194,9 +230,51 @@ class eventlist:
       if isData: print "will reduce sample size by", redFactor
       #Event Loop starts here
       #temp = (event(weight,s,i,elist) for i in range(number_events))
-      temp = [event(weight,s,i,elist, isData, tiny=tiny) for i in range(number_events) if (i%int(redFactor)==0 or not isData) ]
-      self.evlist = self.evlist + temp
-      del temp
+      #temp = [event(weight,s,i,elist, isData, tiny=tiny) for i in range(number_events) if (i%int(redFactor)==0 or not isData) ]
+      for i in range(number_events):
+        if (i%int(redFactor)==0 or not isData):
+            if i%10000==0:
+                print "Done with %i, corresponds to entry %i"%(i,elist.GetEntry(i))
+            s.chain.GetEntry(elist.GetEntry(i))
+            #s.chain.GetEntry(i)
+            #rint = random.randint(1,total_events)
+            #print rint
+            #s.chain.GetEntry(rint)
+            #print elist.GetEntry(i)
+            jet_pt       = [x for x in s.chain.jet_pt]
+            jet_sigmapt  = [x for x in s.chain.jet_sigmapt]
+            jet_phi      = [x for x in s.chain.jet_phi]
+            jet_sigmaphi = [x for x in s.chain.jet_sigmaphi]
+            jet_etabin   = [getBin(abs(x)) for x in s.chain.jet_eta]
+
+            if not isData:
+              jet_sf     = [x for x in s.chain.jet_sf]
+            else: jet_sf = 1
+
+            met_pt       = s.chain.met_pt
+            met_phi      = s.chain.met_phi
+            met_sumpt    = s.chain.met_sumpt
+            nvert        = s.chain.nvertices
+
+            #cands_vec = []
+            #for j,c in enumerate(s.chain.cand_pt):
+            #    if c>0:
+            #        cands_vec.append(cartesian(s.chain.cand_pt[j], s.chain.cand_phi[j]))
+            #cov = jackknifeMultiDim(cands_vec,1)
+            #print cov[0][0]
+            #del cands_vec
+            #if not tiny:
+            #  group        = s.subGroup
+            #  muon_pt      = [x for x in s.chain.muon_pt]
+            #  muon_eta     = [x for x in s.chain.muon_eta]
+            #  muon_phi     = [x for x in s.chain.muon_phi]
+            c_xx = s.chain.cov_xx
+            c_xy = s.chain.cov_xy
+            c_yy = s.chain.cov_yy
+            self.evlist.append(event(weight, jet_pt,jet_sigmapt,jet_phi,jet_sigmaphi,jet_etabin,jet_sf,met_pt,met_phi,met_sumpt,nvert,c_xx, c_xy, c_yy))
+
+      #self.evlist = self.evlist + temp
+      #del temp
   
   def getPileUpDist(self,nvert_max=100):
     self.PUhist = []
@@ -231,7 +309,19 @@ class eventlist:
     self.LL   = 0.
     self.args = args
     for ev in self.evlist:
-      ev.getSigAlt(args)
+      #ev.getSigAlt(args)
+      ev.getSig(args)
+      try:
+        math.log(ev.det)
+      except:
+        #print args[5],args[6],args[7]
+        #print ev.det
+        #print ev.unc_cov_xx
+        #print ev.unc_cov_yy
+        #print ev.unc_cov_xy
+        #print ev.met_pt
+        ev.det = 0.001
+        
       self.LL += ev.weight * (ev.sig + math.log(ev.det))
     return self.LL
   

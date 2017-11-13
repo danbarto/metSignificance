@@ -1,6 +1,7 @@
 import ROOT
 
-from loadAllSamples_aprilRerun import *
+from loadAllSamples_August import *
+#from loadAllSamples_puppi import *
 from eventlist import *
 from likelihood import *
 #from helpers import *
@@ -17,40 +18,54 @@ ROOT.gROOT.ProcessLineSync('.L nvertReweight.C+')
 # Define working points etc
 #presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)>=0&&(abs(jet_eta)>1.9)'
 #presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)==1&&(abs(jet_eta)<0.8)'
-presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)==0'
-types = ['Zmumu','top','EWK','Data']
+presel = 'Sum$(jet_pt>50&&abs(jet_eta)<2.5&&jet_passid)>=0'#&&nvertices<10'
+#presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)==0 && Sum$(ele_pt>80&&abs(ele_eta)<2.1&&ele_tight==1)==1 && Sum$(ele_pt>20&&abs(ele_eta)<2.4&&ele_loose==1)==1'#&&nvertices<10'
+
+filename= "_njetGEq0_nvertReweight"
+
+types = ['Zmumu','top','EWK','Data', 'QCD','gamma']
 
 # Define Labels
 lumiStr = '35.9'
 nameStr = 'Preliminary'
 addStr  = '2016B-H'
 
-addUnc = True
+addUnc = False
 if addUnc:
-    systUnc = pickle.load(file("uncertaintyCache.pkl"))
+    systUnc = pickle.load(file("uncertaintyCache_noStat.pkl"))
 
 # Define variables to plot
 ToPlot = [
 #{'var':'jet_sf*jet_sigmapt',   'nBins':100,'xMin':0., 'xMax':.5,'name':'#sigma_{j}'},
-{'var':'met_sig',   'nBins':25,'xMin':0, 'xMax':50,'name':'Significance'},
-{'var':'met_pt',    'nBins':25,'xMin':0, 'xMax':200,'name':'E_{T}^{miss} (GeV)'},
-#{'var':'met_pt',    'nBins':50,'xMin':0, 'xMax':100,'name':'E_{T}^{miss} (GeV)'},
+#{'var':'met_sig',   'nBins':50,'xMin':0, 'xMax':50,'name':'Significance'},
+#{'var':'met_sig',   'nBins':50,'xMin':0, 'xMax':200,'name':'Significance'},
+#{'var':'cov_xx',   'nBins':50,'xMin':0, 'xMax':4000,'name':'C_{xx}'},
+#{'var':'sqrt(cov_xx)',   'nBins':30,'xMin':0, 'xMax':60,'name':'#sigma_{xx}'},
+#{'var':'sqrt(abs(cov_xy))',   'nBins':30,'xMin':0, 'xMax':60,'name':'#sigma_{xy}'},
+#{'var':'cov_yy',   'nBins':50,'xMin':0, 'xMax':1000,'name':'C_{yy}'},
+#{'var':'met_pt',    'nBins':200,'xMin':0, 'xMax':400,'name':'E_{T}^{miss} (GeV)'},
+{'var':'met_pt',    'nBins':50,'xMin':0, 'xMax':100,'name':'E_{T}^{miss} (GeV)'},
+#{'var':'met_pt',    'nBins':25,'xMin':0, 'xMax':200,'name':'E_{T}^{miss} (GeV)'},
+#{'var':'ele_pt[0]',    'nBins':25,'xMin':0, 'xMax':500,'name':'p_{T}^{l} (GeV)'},
+#{'var':'ele_phi[0]',    'nBins':32,'xMin':-3.2, 'xMax':3.2,'name':'#phi(l)'},
+#{'var':'abs(ele_eta[0])',    'nBins':24,'xMin':0, 'xMax':2.4,'name':'#eta(l)'},
 #{'var':'jet_pt', 'nBins':50,'xMin':0, 'xMax':400,'name':'p_{T}(j_{i}) (GeV)'},
 #{'var':'jet_pt*jet_sigmapt+jet_sf', 'nBins':50,'xMin':0, 'xMax':100,'name':'p_{T}(j_{i}) (GeV)'},
 #{'var':'jet_pt*jet_sigmapt*jet_sf', 'nBins':50,'xMin':0, 'xMax':100,'name':'p_{T}(j_{i}) (GeV)'},
 #{'var':'jet_phi*jet_sigmaphi', 'nBins':100,'xMin':-0.5, 'xMax':0.5,'name':'#sigma_{j}'},
 #{'var':'jet_phi', 'nBins':50,'xMin':-3.2, 'xMax':3.2,'name':'#phi(j_{i})'},
-#{'var':'jet_pt[0]', 'nBins':50,'xMin':0, 'xMax':400,'name':'p_{T}(j_{1}) (GeV)'},
-#{'var':'jet_pt[1]', 'nBins':50,'xMin':0, 'xMax':400,'name':'p_{T}(j_{2}) (GeV)'},
-#{'var':'jet_phi[0]', 'nBins':50,'xMin':-3.2, 'xMax':3.2,'name':'#phi(j_{1})'},
-#{'var':'jet_phi[1]', 'nBins':50,'xMin':-3.2, 'xMax':3.2,'name':'#phi(j_{2})'},
-#{'var':'jet_eta[0]', 'nBins':50,'xMin':-5, 'xMax':5,'name':'#eta(j_{1})'},
-#{'var':'jet_eta[1]', 'nBins':50,'xMin':-5, 'xMax':5,'name':'#eta(j_{2})'},
+{'var':'jet_pt[0]', 'nBins':50,'xMin':0, 'xMax':400,'name':'p_{T}(j_{1}) (GeV)'},
+{'var':'jet_pt[1]', 'nBins':50,'xMin':0, 'xMax':400,'name':'p_{T}(j_{2}) (GeV)'},
+{'var':'jet_phi[0]', 'nBins':50,'xMin':-3.2, 'xMax':3.2,'name':'#phi(j_{1})'},
+{'var':'jet_phi[1]', 'nBins':50,'xMin':-3.2, 'xMax':3.2,'name':'#phi(j_{2})'},
+{'var':'jet_eta[0]', 'nBins':50,'xMin':-5, 'xMax':5,'name':'#eta(j_{1})'},
+{'var':'jet_eta[1]', 'nBins':50,'xMin':-5, 'xMax':5,'name':'#eta(j_{2})'},
 #{'var':'muon_pt[0]','nBins':50,'xMin':0, 'xMax':200,'name':'p_{T}(#mu_{1}) (GeV)'},
 #{'var':'muon_pt[1]','nBins':50,'xMin':0, 'xMax':200,'name':'p_{T}(#mu_{2}) (GeV)'},
-#{'var':'nvertices','nBins':100,'xMin':0, 'xMax':100,'name':'N_{vert}'},
+{'var':'nvertices','nBins':100,'xMin':0, 'xMax':100,'name':'N_{vert}'},
+#{'var':'nvert_true','nBins':100,'xMin':0, 'xMax':100,'name':'N_{vert}'},
 #{'var':'met_sumpt','nBins':100,'xMin':0, 'xMax':3000,'name':'E_{T} unclustered (GeV)'},
-#{'var':'sqrt(met_sumpt)','nBins':100,'xMin':0, 'xMax':100,'name':'sqrt(E_{T} unclustered) sqrt(GeV)'},
+#{'var':'sqrt(met_sumpt)','nBins':30,'xMin':0, 'xMax':60,'name':'sqrt(E_{T} unclustered) sqrt(GeV)'},
 #{'var':'tune_sumpt',   'nBins':100,'xMin':0., 'xMax':2000.,'name':'#sigma_{j}'}
 #{'var':'tune_jet_sigmapt_eta1_dataShift',   'nBins':100,'xMin':0., 'xMax':100.,'name':'#sigma_{j}'}
 #{'var':'jet_sigmapt[0]*jet_pt[0]',   'nBins':100,'xMin':0., 'xMax':100.,'name':'#sigma_{j} (GeV)'}
@@ -59,9 +74,13 @@ ToPlot = [
 ]
 
 # Histograms
+#types = ['wjets','QCD','gamma','DY','top','EWK','Data']
 types = ['Zmumu','top','EWK','Data']
 
 color = {
+  'wjets':ROOT.kCyan+1,
+  'QCD':ROOT.kGreen+2,
+  'gamma':ROOT.kOrange,
   'top':ROOT.kRed-9,
   'Zmumu':ROOT.kYellow-9,
   'EWK':ROOT.kAzure-9,
@@ -69,6 +88,7 @@ color = {
 }
 
 #allMCSamples = allMCSamples_noHCAL
+allMCSamples = allNLOSamples
 
 for s in allMCSamples:
   s.setTargetLumi(35900)
@@ -86,8 +106,10 @@ for p in ToPlot:
     hists.append(ROOT.TH1F(s.name,s.name,nBins,xMin,xMax))
     hists[-1].SetLineColor(color[s.subGroup])
     hists[-1].SetFillColor(color[s.subGroup])
-    s.chain.Draw(var+'>>'+s.name,'('+presel+')*('+str(s.weight)+')','goff')
+    #s.chain.Draw(var+'>>'+s.name,'('+presel+')*('+str(s.weight)+')','goff')
     #s.chain.Draw(var+'>>'+s.name,'('+presel+')*('+str(s.weight)+'*nvertReweight(nvertices))','goff')
+    s.chain.Draw(var+'>>'+s.name,'('+presel+')*('+str(s.weight)+'*nvertReweight(nvertices))*mcweight','goff')
+
     #s.chain.Draw('(-1.20669)**2+0.611**2*met_sumpt>>'+s.name,'('+presel+')*('+str(s.weight)+'*nvertReweight(nvertices))','goff')
     #s.chain.Draw('jet_sigmapt*jet_sf*jet_pt*1.403>>'+s.name,'('+presel+')*('+str(s.weight)+'*nvertReweight(nvertices))','goff')
     #s.chain.Draw('jet_sigmapt*jet_pt*1.505>>'+s.name,'('+presel+')*('+str(s.weight)+'*nvertReweight(nvertices))','goff')
@@ -146,7 +168,7 @@ for p in ToPlot:
   pad1.SetLogy()
   
   stack.Draw('hist')
-  stack.SetMinimum(1)
+  stack.SetMinimum(50)
   #stack.SetMaximum(200000)
   stack.GetXaxis().SetLabelSize(0)
   stack.GetYaxis().SetTitle('Events')
@@ -155,6 +177,7 @@ for p in ToPlot:
   
   data_hist.Draw('e1p same')
   totalHUnc = totalH.Clone()
+#  systUncs = {"JEC":totalH.Clone(),"JER":totalH.Clone(),"unclustered":totalH.Clone()}
   MCerr = ROOT.TGraphAsymmErrors(totalH)
   MCerr.SetFillColor(ROOT.kGray+1)
   MCerr.SetFillStyle(3244)
@@ -162,7 +185,7 @@ for p in ToPlot:
     y = totalH.GetBinContent(p+1)
     yErr = totalH.GetBinError(p+1)
     if addUnc:
-        yErr = sqrt(yErr**2 + (y*systUnc[presel][var]['total'].GetBinContent(p+1))**2)
+        yErr = y*systUnc[presel][var]['total'].GetBinError(p+1)
     totalHUnc.SetBinError(p+1,yErr)
     MCerr.SetPointEYlow(p, yErr)
     MCerr.SetPointEYhigh(p, yErr)
@@ -176,6 +199,7 @@ for p in ToPlot:
   data_hist.SetLineColor(ROOT.kBlack)
   data_hist.Draw('e0p same')
   
+  #leg = ROOT.TLegend(0.75,0.64,0.95,0.92)
   leg = ROOT.TLegend(0.75,0.68,0.95,0.90)
   leg.SetFillColor(ROOT.kWhite)
   leg.SetShadowColor(ROOT.kWhite)
@@ -185,6 +209,12 @@ for p in ToPlot:
   leg.AddEntry(hists[-1],'Z #rightarrow #mu#mu','f')
   leg.AddEntry(hists[0],'top','f')
   leg.AddEntry(hists[3],'EWK','f')
+  #leg.AddEntry(hists[-1],'W+jets','f')
+  #leg.AddEntry(hists[-2],'QCD multijet','f')
+  #leg.AddEntry(hists[7],'#gamma+jets','f')
+  #leg.AddEntry(hists[6],'Drell-Yan','f')
+  #leg.AddEntry(hists[3],'EWK','f')
+  #leg.AddEntry(hists[0],'top','f')
   leg.Draw()
   
   latex2 = ROOT.TLatex()
@@ -207,6 +237,21 @@ for p in ToPlot:
   ratio = ROOT.TH1F('ratio','',nBins,xMin,xMax)
   totalHUnc.Divide(totalH)
   MCerrRatio = ROOT.TGraphAsymmErrors(totalHUnc)
+  
+  #colors = [ROOT.kRed, ROOT.kBlue, ROOT.kGreen, ROOT.kOrange]
+  #systUncs = {}
+  #for i,u in enumerate(systUnc[presel][var]):
+  #  print u
+  #  print colors[i]
+  #  print systUnc[presel][var][u].GetNbinsX()
+  #  tmp = systUnc[presel][var][u].Clone()
+  #  for p in range(0,nBins):
+  #      tmp.SetBinContent(p+1,1)
+  #      tmp.SetBinError(p+1,systUnc[presel][var][u].GetBinContent(p+1))
+  #  systUncs[u] = ROOT.TGraphAsymmErrors(tmp)
+  #  systUncs[u].SetFillColor(colors[i])
+  #  systUncs[u].SetFillStyle(3244)
+  #  del tmp
   ratio.Sumw2()
   ratio = data_hist.Clone()
   ratio.Divide(totalH)
@@ -233,7 +278,21 @@ for p in ToPlot:
     MCerrRatio.SetPointEXhigh(p,xMax/(2*nBins))
   #MCerrRatio.Draw('2 same')
   ratio.Draw('e0p')
-  MCerrRatio.Draw('2 same')
+  #MCerrRatio.Draw('2 same')
+  colors = [ROOT.kGray, ROOT.kRed, ROOT.kBlue, ROOT.kGreen, ROOT.kOrange]
+  if addUnc:
+    systUncs = {}
+    for i,u in enumerate(["total","unclustered","stat","JER","JES"]):
+      systUncs[u] = ROOT.TGraphAsymmErrors(systUnc[presel][var][u])
+      systUncs[u].SetFillColor(colors[i])
+      systUncs[u].SetFillStyle(3244)
+      systUncs[u].SetLineWidth(0)
+      systUncs[u].SetMarkerSize(0)
+      for p in range(0,nBins):
+          systUncs[u].SetPointEXlow(p,xMax/(2*nBins))
+          systUncs[u].SetPointEXhigh(p,xMax/(2*nBins))
+      systUncs[u].Draw('2 same')
+  #MCerrRatio.Draw('2 same')
 
   one = ROOT.TF1("one","1",xMin,xMax)
   one.SetLineColor(ROOT.kRed+1)
@@ -241,13 +300,26 @@ for p in ToPlot:
   one.Draw('same')
   
   ratio.Draw('e0p same')
+  dummy = ROOT.TH1F()
+  pad1.cd()
+  if addUnc:
+    leg2 = ROOT.TLegend(0.55,0.64,0.75,0.90)
+    leg2.SetFillColor(ROOT.kWhite)
+    leg2.SetShadowColor(ROOT.kWhite)
+    leg2.SetBorderSize(0)
+    leg2.SetTextSize(0.04)
+    leg2.AddEntry(dummy,'Uncertainties','')
+    for u in ["total","unclustered","stat","JER","JES"]:
+      leg2.AddEntry(systUncs[u],u)
+    leg2.Draw()
+
   
-  plotDir = "/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BH_Moriond17_rerunApril/"
+  plotDir = "/afs/hephy.at/user/d/dspitzbart/www/METSig/2016BH_August_v1_NLO/"
   if not os.path.isdir(plotDir): os.makedirs(plotDir)
   
-  can.Print(plotDir+var+'_to'+str(xMax)+'_njetEq0_30_systematics.png')
-  can.Print(plotDir+var+'_to'+str(xMax)+'_njetEq0_30_systematics.pdf')
-  can.Print(plotDir+var+'_to'+str(xMax)+'_njetEq0_30_systematics.root')
+  can.Print(plotDir+var+'_to'+str(xMax)+filename+'.png')
+  can.Print(plotDir+var+'_to'+str(xMax)+filename+'.pdf')
+  can.Print(plotDir+var+'_to'+str(xMax)+filename+'.root')
   
   obDelete = hists + [stack,ratio,data_hist,totalH,pad1,pad2,leg,one]
   for o in obDelete:

@@ -50,9 +50,11 @@ def jackknifeMultiDim(s, d):
         for it in itertools.combinations(s,d):
             y  = map(sum,itertools.izip(*it)) # y_i, y_j,...
             cov[ind[0]][ind[1]] += (y[ind[0]] - y_bar[ind[0]])*(y[ind[1]] - y_bar[ind[1]])
-            if ind[0] != ind[1]: cov[ind[1]][ind[0]] += cov[ind[0]][ind[1]]
+            #print cov[ind[0]][ind[1]]
+            if ind[0] != ind[1]:
+                cov[ind[1]][ind[0]] += (y[ind[0]] - y_bar[ind[0]])*(y[ind[1]] - y_bar[ind[1]])
 
-    cov = cov*(N_s-d)/(d*N_jk)
+    cov = abs(cov*(N_s-d)/(d*N_jk))
     return cov
 
 

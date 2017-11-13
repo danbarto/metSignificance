@@ -1,6 +1,7 @@
 import ROOT
 
-from loadAllSamples import *
+from loadAllSamples_puppi import *
+#from loadAllSamples_August import *
 from eventlist import *
 from likelihood import *
 from helpers import *
@@ -10,18 +11,18 @@ import json
 
 def main():
 
-  tuneName = '2016BH_njet1p.txt'
+  tuneName = 'august_2016BH_njet0p_puppi_v2'
   
   # Define working points etc
-  presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)>=1'
+  presel = 'Sum$(jet_pt>30&&abs(jet_eta)<2.5&&jet_passid)>=0'
   sigCut = 9.
   
-  #samples = [WW,WZ,ZZ,ST_top,ST_antitop]
+  #samplesMC = [WW_M17,WZ_M17,ZZ_M17,ST_top_M17,ST_antitop_M17]
+  #samplesMC = [TTJets_M17]
   samplesMC   = allMCSamples
   #samplesMC   = [DY]
   #samplesData = [ICHEP]
   samplesData = [data]
-  #samplesData = [data]
   tightZwindow = False
   
   # load chain to list
@@ -38,6 +39,7 @@ def main():
   #el_MC.doSmearing()
   
   samples = {'MC':el_MC, 'data':el_data}
+  #samples = {'data':el_data}
   #samples = {'MC':el_MC}
   for sample in samples:
     print
@@ -66,9 +68,11 @@ def main():
     
     gmin.SetFunction(LL)
     
-    variable  = ['a1','a2','a3','a4','a5','N1','S1']
-    step      = [0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05]
+    variable  = ['a1','a2','a3','a4','a5','u1','u2']
+    #variable  = ['a1','a2','a3','a4','a5','N1','S1']
+    step      = [0.05]*7
     start     = [1.0,  1.0,  1.0,  1.0, 1.0, 0., .5]
+    #start     = [1.0]*7
     
     print 'Minimizing parameters',variable
     print 'With stepsize of', step
